@@ -20,6 +20,7 @@ export function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
     }
+
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -27,14 +28,14 @@ export function Header() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled ? 'glass py-4' : 'bg-transparent py-6'
+        isScrolled ? 'glass py-4' : 'bg-white/80 backdrop-blur-sm py-5'
       }`}
     >
       <div className="container mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl md:text-3xl font-light tracking-[0.2em] text-foreground">
-            LUMIÃˆRE
+          <span className="text-2xl md:text-3xl font-medium tracking-[0.25em] text-foreground">
+            KHOR
           </span>
         </Link>
 
@@ -44,7 +45,7 @@ export function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-sans tracking-widest uppercase text-foreground/80 hover:text-primary transition-colors duration-300"
+              className="text-sm font-medium tracking-widest uppercase text-foreground hover:text-primary transition-colors duration-300"
             >
               {link.label}
             </Link>
@@ -55,7 +56,7 @@ export function Header() {
         <div className="hidden md:block">
           <Button
             asChild
-            className="bg-primary text-primary-foreground hover:bg-primary/90 font-sans text-sm tracking-widest uppercase px-8 py-5 rounded-none"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm tracking-widest uppercase px-8 py-5 rounded-none shadow-md"
           >
             <Link href="/booking">Book Now</Link>
           </Button>
@@ -80,14 +81,15 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-lg font-sans tracking-widest uppercase text-foreground/80 hover:text-primary transition-colors duration-300"
+                className="text-lg font-medium tracking-widest uppercase text-foreground hover:text-primary transition-colors duration-300"
               >
                 {link.label}
               </Link>
             ))}
+
             <Button
               asChild
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-sans text-sm tracking-widest uppercase px-8 py-5 rounded-none mt-4"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm tracking-widest uppercase px-8 py-5 rounded-none mt-4 shadow-md"
             >
               <Link href="/booking" onClick={() => setIsMobileMenuOpen(false)}>
                 Book Now
@@ -99,4 +101,3 @@ export function Header() {
     </header>
   )
 }
-
