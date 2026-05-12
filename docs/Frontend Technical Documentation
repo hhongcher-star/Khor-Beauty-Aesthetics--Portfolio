@@ -1,0 +1,343 @@
+# Frontend Technical Documentation
+
+## Khor Beauty Aesthetics Website
+
+---
+
+# 1. Frontend Overview
+
+The frontend is built using a modern React-based architecture powered by Next.js App Router.
+
+The purpose of the frontend is to provide:
+
+* Responsive website UI
+* Luxury aesthetic branding experience
+* Booking interaction
+* Service showcase
+* Contact & inquiry pages
+* Reusable component-based architecture
+
+The frontend follows a scalable production-ready structure suitable for future SaaS-level expansion.
+
+---
+
+# 2. Frontend Technology Stack
+
+| Technology       | Purpose                      |
+| ---------------- | ---------------------------- |
+| Next.js          | React framework              |
+| React            | UI rendering                 |
+| TypeScript (TSX) | Typed frontend development   |
+| Tailwind CSS     | Utility-first styling        |
+| shadcn/ui        | Reusable UI component system |
+| Turbopack        | Development bundler          |
+| PostCSS          | CSS processing               |
+| Google Fonts     | Typography system            |
+
+---
+
+# 3. Frontend Folder Structure
+
+```txt
+frontend/
+ ┣ app/
+ ┣ components/
+ ┣ hooks/
+ ┣ lib/
+ ┣ public/
+ ┣ styles/
+ ┣ package.json
+ ┣ tsconfig.json
+ ┣ next.config.ts
+ ┣ postcss.config.mjs
+ ┗ components.json
+```
+
+---
+
+# 4. App Router Structure
+
+The project uses Next.js App Router architecture.
+
+```txt
+app/
+ ┣ about/
+ ┃ ┗ page.tsx
+ ┣ booking/
+ ┃ ┗ page.tsx
+ ┣ contact/
+ ┃ ┗ page.tsx
+ ┣ services/
+ ┃ ┗ page.tsx
+ ┣ globals.css
+ ┣ layout.tsx
+ ┗ page.tsx
+```
+
+---
+
+# 5. Page Responsibilities
+
+| File              | Purpose             |
+| ----------------- | ------------------- |
+| page.tsx          | Homepage            |
+| about/page.tsx    | About page          |
+| services/page.tsx | Services listing    |
+| booking/page.tsx  | Booking page        |
+| contact/page.tsx  | Contact page        |
+| layout.tsx        | Global page wrapper |
+| globals.css       | Global styling      |
+
+---
+
+# 6. Component Architecture
+
+The frontend uses modular reusable component architecture.
+
+```txt
+components/
+ ┣ home/
+ ┣ about/
+ ┣ services/
+ ┣ contact/
+ ┣ booking/
+ ┣ layout/
+ ┗ ui/
+```
+
+---
+
+# 7. Core Layout Components
+
+## Header
+
+```txt
+components/layout/header.tsx
+```
+
+Responsibilities:
+
+* Navigation bar
+* Logo display
+* Navigation links
+* CTA buttons
+* Mobile responsive menu
+
+---
+
+## Footer
+
+```txt
+components/layout/footer.tsx
+```
+
+Responsibilities:
+
+* Contact information
+* Social media links
+* Copyright
+* Footer navigation
+
+---
+
+# 8. Homepage Components
+
+```txt
+components/home/
+```
+
+| Component                | Purpose                    |
+| ------------------------ | -------------------------- |
+| hero.tsx                 | Main landing hero section  |
+| featured-treatments.tsx  | Highlighted services       |
+| before-after-gallery.tsx | Visual gallery             |
+| testimonials.tsx         | Customer reviews           |
+| faq.tsx                  | Frequently asked questions |
+| introduction.tsx         | Brand introduction         |
+| cta-section.tsx          | Call-to-action section     |
+
+---
+
+# 9. UI Design System
+
+The project uses shadcn/ui as the UI component system.
+
+Located in:
+
+```txt
+components/ui/
+```
+
+Examples:
+
+| Component     | Purpose       |
+| ------------- | ------------- |
+| button.tsx    | Buttons       |
+| input.tsx     | Form inputs   |
+| card.tsx      | Service cards |
+| dialog.tsx    | Modals        |
+| accordion.tsx | FAQ sections  |
+| tabs.tsx      | Tab switching |
+| toast.tsx     | Notifications |
+
+---
+
+# 10. Styling System
+
+Global styling is handled in:
+
+```txt
+app/globals.css
+```
+
+The project uses:
+
+* Tailwind CSS
+* CSS variables
+* Custom animations
+* Glassmorphism utilities
+* Responsive utility classes
+
+---
+
+# 11. Tailwind CSS Usage
+
+Example:
+
+```tsx
+className="
+flex
+items-center
+justify-between
+px-8
+py-4
+bg-white/70
+backdrop-blur-md
+"
+```
+
+Purpose:
+
+| Class            | Meaning                     |
+| ---------------- | --------------------------- |
+| flex             | Flexbox layout              |
+| items-center     | Vertical alignment          |
+| justify-between  | Horizontal spacing          |
+| px-8             | Horizontal padding          |
+| py-4             | Vertical padding            |
+| bg-white/70      | Semi-transparent background |
+| backdrop-blur-md | Glass blur effect           |
+
+---
+
+# 12. Frontend Assets
+
+Located in:
+
+```txt
+public/
+```
+
+Contains:
+
+* Logo
+* Hero images
+* Treatment photos
+* Icons
+* Before/after images
+
+---
+
+# 13. Development Commands
+
+## Start Development Server
+
+```bash
+cd frontend
+npm run dev
+```
+
+---
+
+## Production Build
+
+```bash
+npm run build
+```
+
+---
+
+## Start Production Server
+
+```bash
+npm start
+```
+
+---
+
+# 14. Git Workflow
+
+## Initial Setup
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+```
+
+---
+
+## Push to GitHub
+
+```bash
+git branch -M main
+git remote add origin <repo-url>
+git push -u origin main
+```
+
+---
+
+# 15. Frontend Architecture Philosophy
+
+The frontend architecture is designed with:
+
+* Component reusability
+* Clean separation of concerns
+* Scalable design system
+* Modern React patterns
+* Responsive-first design
+* Future backend integration readiness
+
+---
+
+# 16. Current Frontend Status
+
+Current frontend implementation includes:
+
+✅ Multi-page structure
+✅ Responsive layout
+✅ Luxury aesthetic design
+✅ Hero landing section
+✅ Services showcase
+✅ Booking UI structure
+✅ Reusable UI system
+✅ Tailwind integration
+✅ Next.js App Router structure
+✅ TypeScript architecture
+
+---
+
+# 17. Future Frontend Expansion
+
+Planned future frontend enhancements:
+
+* Authentication system
+* CRM dashboard
+* Payment integration
+* WhatsApp automation
+* Appointment management
+* Analytics dashboard
+* Admin panel
+* Customer portal
+* API integration
+* Dark mode support
