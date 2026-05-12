@@ -20,7 +20,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: 'Email Us',
-    details: ['hello@lumiere.com', 'booking@lumiere.com'],
+    details: ['hello@Khor.com', 'booking@khor.com'],
   },
   {
     icon: Clock,
