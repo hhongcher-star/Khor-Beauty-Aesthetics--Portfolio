@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { format, addDays, isSameDay } from 'date-fns'
@@ -400,3 +400,4 @@ export function BookingForm() {
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -177,3 +177,4 @@ export function BeforeAfterGallery() {
     </section>
   )
 }
+

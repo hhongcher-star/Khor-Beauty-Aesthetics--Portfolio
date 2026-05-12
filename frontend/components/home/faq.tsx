@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -97,3 +97,4 @@ export function FAQ() {
     </section>
   )
 }
+

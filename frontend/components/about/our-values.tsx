@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { Heart, Leaf, Award, Users } from 'lucide-react'
@@ -82,3 +82,4 @@ export function OurValues() {
     </section>
   )
 }
+

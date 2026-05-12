@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { Sparkles, Clock, Zap, Heart } from 'lucide-react'
@@ -76,3 +76,4 @@ export function ServiceCategories() {
     </section>
   )
 }
+

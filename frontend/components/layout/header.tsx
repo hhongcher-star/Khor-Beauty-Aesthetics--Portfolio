@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
@@ -34,7 +34,7 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl md:text-3xl font-light tracking-[0.2em] text-foreground">
-            LUMIÈRE
+            LUMIÃˆRE
           </span>
         </Link>
 
@@ -99,3 +99,4 @@ export function Header() {
     </header>
   )
 }
+

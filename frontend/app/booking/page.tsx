@@ -1,10 +1,10 @@
-import { Header } from '@/components/layout/header'
+﻿import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { BookingForm } from '@/components/booking/booking-form'
 
 export const metadata = {
-  title: 'Book Appointment | Lumière Beauty Clinic',
-  description: 'Schedule your luxury skincare treatment at Lumière Beauty Clinic. Choose your service, select a date, and experience Korean beauty at its finest.',
+  title: 'Book Appointment | LumiÃ¨re Beauty Clinic',
+  description: 'Schedule your luxury skincare treatment at LumiÃ¨re Beauty Clinic. Choose your service, select a date, and experience Korean beauty at its finest.',
 }
 
 export default function BookingPage() {
@@ -34,3 +34,4 @@ export default function BookingPage() {
     </main>
   )
 }
+

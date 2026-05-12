@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 
@@ -64,13 +64,13 @@ export function OurStory() {
             </h2>
             <div className="space-y-6 font-sans text-muted-foreground leading-relaxed">
               <p>
-                Lumière Beauty Clinic was founded with a simple yet profound vision: to bring the transformative power of Korean skincare to discerning clients who seek nothing but the best for their skin.
+                LumiÃ¨re Beauty Clinic was founded with a simple yet profound vision: to bring the transformative power of Korean skincare to discerning clients who seek nothing but the best for their skin.
               </p>
               <p>
-                Our founder, Dr. Soo-yeon Park, trained extensively in Seoul before bringing her expertise to establish Lumière. With over 15 years of experience in advanced aesthetics, she has cultivated a team of specialists who share her passion for excellence.
+                Our founder, Dr. Soo-yeon Park, trained extensively in Seoul before bringing her expertise to establish LumiÃ¨re. With over 15 years of experience in advanced aesthetics, she has cultivated a team of specialists who share her passion for excellence.
               </p>
               <p>
-                Today, we continue to honor the time-tested traditions of Korean beauty while embracing cutting-edge technology. Every treatment at Lumière is a harmonious blend of ancient wisdom and modern science.
+                Today, we continue to honor the time-tested traditions of Korean beauty while embracing cutting-edge technology. Every treatment at LumiÃ¨re is a harmonious blend of ancient wisdom and modern science.
               </p>
             </div>
           </div>
@@ -79,3 +79,4 @@ export function OurStory() {
     </section>
   )
 }
+

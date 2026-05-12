@@ -1,4 +1,4 @@
-import { Header } from '@/components/layout/header'
+﻿import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Hero } from '@/components/home/hero'
 import { Introduction } from '@/components/home/introduction'
@@ -23,3 +23,4 @@ export default function HomePage() {
     </main>
   )
 }
+

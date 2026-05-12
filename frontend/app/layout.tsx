@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Cormorant_Garamond, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -15,8 +15,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Lumière Beauty Clinic | Luxury Korean Skincare',
-  description: 'Experience the art of Korean beauty at Lumière. Premium skincare treatments, advanced aesthetics, and personalized care in a serene environment.',
+  title: 'LumiÃ¨re Beauty Clinic | Luxury Korean Skincare',
+  description: 'Experience the art of Korean beauty at LumiÃ¨re. Premium skincare treatments, advanced aesthetics, and personalized care in a serene environment.',
   keywords: ['beauty clinic', 'korean skincare', 'aesthetic treatments', 'luxury spa', 'skin care'],
 }
 
@@ -34,3 +34,4 @@ export default function RootLayout({
     </html>
   )
 }
+

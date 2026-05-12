@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import { Star, Quote } from 'lucide-react'
@@ -8,7 +8,7 @@ const testimonials = [
     id: 1,
     name: 'Minhee Kim',
     role: 'Regular Client',
-    content: 'The Korean Glass Skin treatment completely transformed my complexion. The team at Lumière truly understands skin care at a deeper level.',
+    content: 'The Korean Glass Skin treatment completely transformed my complexion. The team at LumiÃ¨re truly understands skin care at a deeper level.',
     rating: 5,
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2070&auto=format&fit=crop',
   },
@@ -24,7 +24,7 @@ const testimonials = [
     id: 3,
     name: 'Jennifer Park',
     role: 'VIP Member',
-    content: 'I have been coming to Lumière for years. Their attention to detail and personalized approach keeps me coming back. Absolutely worth every penny.',
+    content: 'I have been coming to LumiÃ¨re for years. Their attention to detail and personalized approach keeps me coming back. Absolutely worth every penny.',
     rating: 5,
     image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1988&auto=format&fit=crop',
   },
@@ -106,3 +106,4 @@ export function Testimonials() {
     </section>
   )
 }
+

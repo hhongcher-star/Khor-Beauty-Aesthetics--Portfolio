@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export function ContactHero() {
   return (
@@ -17,3 +17,4 @@ export function ContactHero() {
     </section>
   )
 }
+
