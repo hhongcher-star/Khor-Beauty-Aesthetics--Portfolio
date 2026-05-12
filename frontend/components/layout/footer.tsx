@@ -23,7 +23,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="inline-block">
-              <span className="text-2xl font-light tracking-[0.2em]">LUMIÃˆRE</span>
+              <span className="text-2xl font-light tracking-[0.2em]">KHOR</span>
             </Link>
             <p className="mt-6 text-background/70 font-sans text-sm leading-relaxed">
               Experience the art of Korean beauty. Premium skincare treatments and personalized care in a serene environment.
@@ -100,7 +100,7 @@ export function Footer() {
               </p>
               <p>
                 <a href="mailto:hello@lumiere.com" className="hover:text-background transition-colors">
-                  hello@lumiere.com
+                  hello@KHOR.com
                 </a>
               </p>
             </div>
@@ -110,7 +110,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-background/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-background/50 font-sans text-xs">
-            &copy; {new Date().getFullYear()} LumiÃ¨re Beauty Clinic. All rights reserved.
+            &copy; {new Date().getFullYear()} KHOR Beauty Clinic. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link href="#" className="text-background/50 hover:text-background font-sans text-xs transition-colors">

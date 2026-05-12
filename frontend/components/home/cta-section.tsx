@@ -38,39 +38,57 @@ export function CTASection() {
           alt="Luxury spa environment"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-foreground/70" />
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/55" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-6 text-center">
-        <div className={`max-w-3xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <p className="font-sans text-sm tracking-[0.3em] uppercase text-primary-foreground/80 mb-6">
+        <div
+          className={`max-w-3xl mx-auto transition-all duration-1000 ${
+            isVisible
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 translate-y-10'
+          }`}
+        >
+          {/* Subtitle */}
+          <p className="font-sans text-sm md:text-base font-medium tracking-[0.35em] uppercase text-[#E7D3B0] mb-6">
             Begin Your Journey
           </p>
-          <h2 className="text-4xl md:text-6xl font-light leading-tight text-primary-foreground mb-8">
+
+          {/* Title */}
+          <h2 className="text-5xl md:text-7xl font-light leading-tight text-white mb-8">
             Ready to Reveal Your
             <br />
             <span className="italic">Natural Glow?</span>
           </h2>
-          <p className="font-sans text-lg text-primary-foreground/80 max-w-xl mx-auto mb-12 leading-relaxed">
-            Book your consultation today and let our experts create a personalized treatment plan just for you.
+
+          {/* Description */}
+          <p className="font-sans text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-12 leading-relaxed">
+            Book your consultation today and let our experts create a
+            personalized treatment plan just for you.
           </p>
+
+          {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* Book Consultation */}
             <Button
               asChild
               size="lg"
-              className="bg-primary-foreground text-foreground hover:bg-primary-foreground/90 font-sans text-sm tracking-widest uppercase px-10 py-6 rounded-none"
+              className="bg-white text-black hover:bg-white/90 font-medium font-sans text-sm tracking-widest uppercase px-10 py-6 rounded-none shadow-md"
             >
               <Link href="/booking">
                 Book Consultation
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+
+            {/* Contact Us */}
             <Button
               asChild
-              variant="outline"
               size="lg"
-              className="border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 font-sans text-sm tracking-widest uppercase px-10 py-6 rounded-none"
+              className="bg-[#C9A24A] text-white hover:bg-[#B68F3A] font-medium font-sans text-sm tracking-widest uppercase px-10 py-6 rounded-none shadow-md"
             >
               <Link href="/contact">Contact Us</Link>
             </Button>
@@ -80,4 +98,3 @@ export function CTASection() {
     </section>
   )
 }
-

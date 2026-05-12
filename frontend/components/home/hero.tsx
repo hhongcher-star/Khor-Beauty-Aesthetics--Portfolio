@@ -25,9 +25,12 @@ export function Hero() {
       <div className="relative z-10 container mx-auto px-6 text-center">
         <div className="max-w-4xl mx-auto">
           {/* Subtitle */}
-          <p className="font-sans text-sm tracking-[0.3em] uppercase text-primary mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
-            Premium Korean Beauty
-          </p>
+         <p
+  className="font-sans text-sm md:text-base font-medium tracking-[0.28em] uppercase text-[#8A4F45] mb-6 animate-fade-in-up opacity-0 drop-shadow-sm"
+  style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}
+>
+  Premium Korean Beauty
+</p>
 
           {/* Main Heading */}
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-light leading-tight tracking-tight text-balance animate-fade-in-up opacity-0" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>

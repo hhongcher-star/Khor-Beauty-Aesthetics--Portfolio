@@ -52,7 +52,7 @@ export function Introduction() {
             </h2>
             <div className="space-y-6 font-sans text-muted-foreground leading-relaxed">
               <p>
-                At LumiÃ¨re, we believe that true beauty comes from within. Our approach combines centuries-old Korean skincare wisdom with cutting-edge technology to deliver transformative results.
+                At KHOR, we believe that true beauty comes from within. Our approach combines centuries-old Korean skincare wisdom with cutting-edge technology to deliver transformative results.
               </p>
               <p>
                 Each treatment is meticulously crafted and personalized to your unique skin needs, ensuring that you receive the care and attention you deserve.
