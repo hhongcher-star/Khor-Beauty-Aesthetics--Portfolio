@@ -1,0 +1,163 @@
+# AI-Native Fullstack Workflow
+
+---
+
+# 🤖 AI-Assisted Development Workflow
+
+This project adopts an AI-assisted fullstack development workflow to improve:
+
+* Development efficiency
+* MVP development speed
+* UI prototype generation
+* Code quality
+* Testing and maintenance workflow
+
+---
+
+# ⚙️ Development Pipeline
+
+```txt id="ud55tr"
+1. Planning & Architecture
+(ChatGPT)
+
+↓
+
+2. Visual Prototype / UI Direction
+(v0.dev / TeleportHQ)
+
+↓
+
+3. Rapid MVP Scaffolding
+(Bolt.new)
+
+↓
+
+4. Real Implementation & Cleanup
+(Cursor / Windsurf)
+
+↓
+
+5. Human Architecture Review
+(Developer Review)
+
+↓
+
+6. AI Test Generation
+(Qodo / Copilot)
+
+↓
+
+7. AI Security Review
+(Snyk / Checkmarx)
+
+↓
+
+8. Docker + CI/CD
+
+↓
+
+9. Deployment
+(Vercel)
+
+↓
+
+10. Runtime Monitoring & Maintenance
+```
+
+---
+
+# 📌 Workflow Explanation
+
+| Stage                   | Purpose                                                        |
+| ----------------------- | -------------------------------------------------------------- |
+| Planning & Architecture | Feature planning, API design, and system architecture analysis |
+| Visual Prototype        | UI direction and page prototyping                              |
+| MVP Scaffolding         | Rapid MVP and page structure generation                        |
+| Real Implementation     | Production implementation and code cleanup                     |
+| Human Review            | Manual review of system architecture and logic                 |
+| AI Testing              | Automated testing and edge case validation                     |
+| Security Review         | Dependency and API security checking                           |
+| Deployment              | Website deployment and production release                      |
+| Maintenance             | Runtime monitoring and ongoing maintenance                     |
+
+---
+
+# 🎯 Workflow Objective
+
+The objective of this workflow is to:
+
+* Improve development efficiency
+* Reduce repetitive work
+* Accelerate MVP development
+* Maintain code maintainability
+* Establish a modern AI-assisted development workflow
+
+---
+
+# 🧱 Workflow Philosophy
+
+This workflow combines:
+
+```txt id="zz8vx7"
+AI-assisted rapid development
++
+Human architecture decision making
+```
+
+to achieve faster project delivery while maintaining scalable and maintainable system architecture.
+
+---
+
+# 🚀 Benefits of AI-Native Workflow
+
+Advantages of this workflow include:
+
+* Faster prototyping
+* Reduced boilerplate coding
+* Improved frontend generation speed
+* Better documentation workflow
+* Faster debugging and testing
+* Easier solo development workflow
+* More efficient MVP iteration cycle
+
+---
+
+# 📌 Development Strategy
+
+The project focuses on:
+
+```txt id="y63ehk"
+Fast MVP Development
+→ Architecture Validation
+→ Iterative Improvement
+→ Production Optimization
+```
+
+instead of traditional long-cycle development approaches.
+
+---
+
+# 🔧 Human Developer Responsibilities
+
+Despite AI-assisted development, the developer remains responsible for:
+
+* System architecture decisions
+* Business logic validation
+* Security review
+* Final code quality review
+* Deployment strategy
+* Feature prioritization
+* UI/UX refinement
+
+---
+
+# 📦 Final Workflow Outcome
+
+The final workflow aims to produce:
+
+* Production-ready frontend
+* Maintainable backend architecture
+* Scalable system foundation
+* Faster development lifecycle
+* Cleaner MVP deployment process
+* Modern AI-native fullstack workflow structure

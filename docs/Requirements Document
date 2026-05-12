@@ -1,0 +1,194 @@
+# Khor Beauty Aesthetics
+
+---
+
+# 🎯 Project Objective
+
+To develop a premium aesthetic medical website designed to:
+
+* Showcase aesthetic treatments
+* Provide customer enquiry functionality
+* Support appointment booking
+* Support deposit payment
+* Provide backend content management
+
+---
+
+# 👥 User Roles
+
+## 1️⃣ Customer
+
+Customers are able to:
+
+* Browse the website
+* View aesthetic treatments
+* View treatment details
+* Submit enquiries
+* Contact via WhatsApp
+* Submit bookings
+* Make deposit payments
+
+---
+
+## 2️⃣ Administrator (Admin)
+
+Administrators are able to:
+
+* Login to admin dashboard
+* Create / Edit / Delete services
+* Upload treatment images
+* View customer enquiries
+* View booking records
+* Update website content
+
+---
+
+# 🌐 Frontend Requirements
+
+---
+
+## Homepage
+
+The homepage should include:
+
+* Hero Section
+* Brand Introduction
+* Featured Treatments
+* Before / After Showcase
+* WhatsApp CTA
+* Customer Testimonials
+* Footer
+
+---
+
+## Treatment Listing Page
+
+The page should include:
+
+* Display all treatments
+* Treatment image gallery
+* Short description
+* Price preview
+* View Details button
+
+---
+
+## Treatment Detail Page
+
+The page should include:
+
+* Treatment details
+* Treatment images
+* Benefits
+* Procedure information
+* Pricing
+* Booking CTA
+
+---
+
+## Booking Form
+
+Customers should be able to:
+
+* Enter full name
+* Enter contact number
+* Select treatment
+* Select appointment date
+* Leave additional notes
+
+---
+
+## Enquiry Form
+
+Customers should be able to:
+
+* Submit enquiries
+* Leave contact details
+* Contact quickly via WhatsApp
+
+---
+
+# 💳 Payment Requirements
+
+The system should support:
+
+* FPX
+* TNG eWallet
+* Card Payment
+* Bank Transfer
+
+---
+
+# ⚙️ Backend Requirements
+
+The backend should support:
+
+* REST API
+* Admin Authentication
+* Booking Management
+* Enquiry Management
+* Service CRUD
+* Image Upload Handling
+
+---
+
+# 🗄 Database Requirements
+
+The database should store:
+
+## Services
+
+* Service Name
+* Description
+* Price
+* Images
+
+---
+
+## Bookings
+
+* Customer Name
+* Contact Number
+* Selected Service
+* Booking Date
+* Payment Status
+
+---
+
+## Enquiries
+
+* Customer Name
+* Phone Number
+* Message
+
+---
+
+# 📱 Responsive Design Requirements
+
+The website must be:
+
+* Mobile Friendly
+* Tablet Responsive
+* Desktop Responsive
+
+---
+
+# 🔒 Security Requirements
+
+The system should include:
+
+* Admin Login Authentication
+* Basic Form Validation
+* Protected Admin Routes
+* Secure Payment Handling
+
+---
+
+# 🚀 Performance Requirements
+
+The website should provide:
+
+* Fast Loading Speed
+* Optimized Images
+* Basic SEO
+* Responsive UI

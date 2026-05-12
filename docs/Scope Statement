@@ -1,0 +1,152 @@
+# Project Scope Statement
+
+This document defines:
+
+* Features included in the project
+* Features excluded from the project
+* Development boundaries
+* Project delivery scope
+
+The purpose of this document is to prevent scope creep during development.
+
+---
+
+# ✅ Included Scope
+
+---
+
+## 🌐 Website Development
+
+Development of a responsive aesthetic medical beauty website, including:
+
+* Homepage
+* Treatment Listing Page
+* Treatment Detail Page
+* About Section
+* Contact Section
+* WhatsApp Integration
+
+---
+
+## 📅 Booking System
+
+Customers are able to:
+
+* Submit appointment bookings
+* Select treatments
+* Leave contact information
+* Submit additional notes
+
+---
+
+## 💬 Customer Enquiry
+
+Customers are able to:
+
+* Submit enquiry forms
+* Contact via WhatsApp
+* Send general enquiries and consultation requests
+
+---
+
+## 💳 Payment Functionality
+
+The system will support:
+
+* FPX
+* TNG eWallet
+* Credit / Debit Card
+* Bank Transfer
+
+Used for:
+
+* Deposit payment
+* Basic payment workflow
+
+---
+
+## ⚙️ Admin Panel
+
+Administrators are able to:
+
+* Create / Edit / Delete treatments
+* Upload treatment images
+* Update pricing
+* View bookings
+* View enquiries
+
+---
+
+## 📱 Responsive Design
+
+The website will support:
+
+* Mobile devices
+* Tablet devices
+* Desktop devices
+
+---
+
+## 🎨 UI / UX Design
+
+The website will follow:
+
+* Premium aesthetic design
+* Minimal UI approach
+* Soft luxury medical beauty branding
+
+---
+
+# ❌ Excluded Scope
+
+The following features are not included in the current project scope:
+
+* Membership System
+* Loyalty Point System
+* Mobile Application
+* AI Chatbot
+* Multi-language System
+* Advanced CRM System
+* Inventory Management
+* Staff Management
+* Automated Marketing System
+* Full E-commerce System
+
+---
+
+# ⚠️ Project Limitations
+
+Due to project budget and project scale limitations:
+
+* The project focuses on MVP (Minimum Viable Product)
+* Brand presentation and booking functionality are the primary objectives
+* Enterprise-level systems are not included
+* Complex automation workflows are excluded
+
+---
+
+# 🚀 Future Expansion
+
+Future versions may include:
+
+* Membership Module
+* Customer Account System
+* CRM Automation
+* Loyalty Rewards
+* Analytics Dashboard
+* AI Consultation Assistant
+* Multi-branch Support
+
+---
+
+# 📦 Project Deliverables
+
+Upon project completion, the following will be delivered:
+
+* Responsive Website
+* Frontend Source Code
+* Backend API
+* Database Structure
+* Admin Dashboard
+* Deployment Setup
+* Basic Documentation
