@@ -1,0 +1,545 @@
+# Khor Beauty Backend Technical Documentation
+
+## Backend API Server Architecture Documentation
+
+---
+
+# 1. Backend Project Overview
+
+The Khor Beauty Backend system is responsible for the core business logic of the entire website and admin management system.
+
+The backend is mainly responsible for:
+
+* Appointment booking management
+* Customer enquiries management
+* Services management
+* Admin authentication
+* CRM customer data processing
+* Frontend and backend API communication
+* Payment integration
+* WhatsApp automation
+* Email notification system
+* Dashboard analytics
+
+The backend acts as the:
+
+```txt
+Central Business Logic System
+```
+
+Connected structure:
+
+```txt
+Frontend Website
+↓
+Admin Dashboard
+↓
+Backend API Server
+↓
+Database
+```
+
+---
+
+# 2. Backend Technology Stack
+
+The backend uses:
+
+| Technology | Purpose                         |
+| ---------- | ------------------------------- |
+| Node.js    | JavaScript Runtime              |
+| Express.js | Backend Framework               |
+| TypeScript | Type System                     |
+| Prisma ORM | Database ORM                    |
+| PostgreSQL | Relational Database             |
+| dotenv     | Environment Variable Management |
+| JWT        | Authentication                  |
+| bcrypt     | Password Hashing                |
+| CORS       | Cross-Origin API Handling       |
+| Nodemon    | Development Server              |
+| Zod        | Request Validation              |
+
+---
+
+# 3. Backend Core Architecture
+
+The backend follows a:
+
+```txt
+Layered Architecture
+```
+
+Structure:
+
+```txt
+Frontend
+   ↓
+API Routes
+   ↓
+Controllers
+   ↓
+Services
+   ↓
+Prisma ORM
+   ↓
+PostgreSQL Database
+```
+
+---
+
+# 4. Backend Folder Structure
+
+```txt
+backend-api/
+ ┣ src/
+ ┃ ┣ controllers/
+ ┃ ┣ routes/
+ ┃ ┣ services/
+ ┃ ┣ middleware/
+ ┃ ┣ config/
+ ┃ ┣ utils/
+ ┃ ┣ types/
+ ┃ ┣ app.ts
+ ┃ ┗ server.ts
+ ┣ prisma/
+ ┃ ┗ schema.prisma
+ ┣ .env
+ ┣ package.json
+ ┣ tsconfig.json
+ ┗ nodemon.json
+```
+
+---
+
+# 5. Folder Responsibilities
+
+| Folder      | Purpose                     |
+| ----------- | --------------------------- |
+| controllers | Request / Response Handling |
+| routes      | API Endpoint Definitions    |
+| services    | Business Logic              |
+| middleware  | Middleware System           |
+| config      | System Configuration        |
+| utils       | Utility Functions           |
+| prisma      | Database Schema             |
+| types       | TypeScript Type Definitions |
+
+---
+
+# 6. Controllers Architecture
+
+```txt
+src/controllers/
+```
+
+Responsibilities:
+
+* Receive requests
+* Call services
+* Return responses
+* Handle API status management
+
+Examples:
+
+```txt
+booking.controller.ts
+service.controller.ts
+enquiry.controller.ts
+auth.controller.ts
+```
+
+---
+
+# 7. Routes Architecture
+
+```txt
+src/routes/
+```
+
+Responsibilities:
+
+* API endpoint routing
+* Route grouping
+* Middleware binding
+
+Examples:
+
+```txt
+/api/bookings
+/api/services
+/api/enquiries
+/api/auth
+```
+
+---
+
+# 8. Services Architecture
+
+```txt
+src/services/
+```
+
+Responsibilities:
+
+* Business logic processing
+* Database operations
+* Validation handling
+* CRM data processing
+* External service integration
+
+Example:
+
+```txt
+booking.service.ts
+```
+
+Responsible for:
+
+* Creating bookings
+* Validating bookings
+* Saving bookings
+* Triggering notification systems
+
+---
+
+# 9. Middleware System
+
+```txt
+src/middleware/
+```
+
+Responsibilities:
+
+| Middleware               | Purpose               |
+| ------------------------ | --------------------- |
+| auth.middleware.ts       | JWT Verification      |
+| error.middleware.ts      | Global Error Handling |
+| validation.middleware.ts | Request Validation    |
+| logger.middleware.ts     | API Logging           |
+| cors.middleware.ts       | Cross-Origin Handling |
+
+---
+
+# 10. Prisma ORM
+
+The backend uses:
+
+```txt
+Prisma ORM
+```
+
+Connected to PostgreSQL.
+
+Location:
+
+```txt
+prisma/schema.prisma
+```
+
+Responsibilities:
+
+* Database schema
+* Table mapping
+* Relationships
+* Migration management
+
+---
+
+# 11. PostgreSQL Database
+
+The backend uses:
+
+```txt
+PostgreSQL
+```
+
+as the primary database.
+
+Core tables:
+
+| Table     | Purpose                  |
+| --------- | ------------------------ |
+| bookings  | Appointment records      |
+| enquiries | Customer enquiry records |
+| services  | Service records          |
+| admins    | Admin accounts           |
+| users     | Future customer accounts |
+
+---
+
+# 12. Booking System
+
+Booking API:
+
+```txt
+/api/bookings
+```
+
+Responsibilities:
+
+* Create bookings
+* Retrieve bookings
+* Update bookings
+* Delete bookings
+* Track booking status
+
+Booking statuses:
+
+```txt
+pending
+confirmed
+completed
+cancelled
+```
+
+---
+
+# 13. Enquiry System
+
+Enquiry API:
+
+```txt
+/api/enquiries
+```
+
+Responsibilities:
+
+* Customer enquiries
+* CRM lead collection
+* WhatsApp enquiries
+* Contact form submissions
+
+Enquiry statuses:
+
+```txt
+new
+contacted
+closed
+```
+
+---
+
+# 14. Services System
+
+Services API:
+
+```txt
+/api/services
+```
+
+Responsibilities:
+
+* Create services
+* Update services
+* Pricing management
+* Treatment categorization
+* Service activation status
+
+---
+
+# 15. Authentication System
+
+The backend authentication uses:
+
+```txt
+JWT Authentication
+```
+
+Features:
+
+* Admin login
+* Protected routes
+* Role-based authorization
+* Token verification
+* Session handling
+
+Password security:
+
+```txt
+bcrypt password hashing
+```
+
+---
+
+# 16. Environment Variables
+
+Stored in:
+
+```txt
+.env
+```
+
+Example:
+
+```env
+PORT=5000
+
+DATABASE_URL=postgresql://postgres:password@localhost:5432/khorbeauty
+
+JWT_SECRET=your_secret_key
+```
+
+---
+
+# 17. Backend API Structure
+
+Base API:
+
+```txt
+/api
+```
+
+Examples:
+
+```txt
+/api/bookings
+/api/services
+/api/enquiries
+/api/auth
+```
+
+API style:
+
+```txt
+RESTful API Architecture
+```
+
+---
+
+# 18. Error Handling Strategy
+
+The backend uses:
+
+```txt
+Centralized Error Handling
+```
+
+Features:
+
+* Async error handling
+* Validation errors
+* API status codes
+* Database errors
+* Request sanitization
+
+---
+
+# 19. Security System
+
+Backend security mechanisms include:
+
+* JWT Authentication
+* Password Hashing
+* CORS Protection
+* Environment Variable Protection
+* Request Validation
+* Prisma SQL Injection Protection
+
+---
+
+# 20. Frontend & Backend Integration
+
+The frontend will use:
+
+```ts
+fetch()
+axios()
+```
+
+to communicate with backend APIs.
+
+Example:
+
+```ts
+await fetch('http://localhost:5000/api/bookings')
+```
+
+Flow:
+
+```txt
+Frontend Form
+↓
+Backend API
+↓
+Controller
+↓
+Service
+↓
+Prisma
+↓
+PostgreSQL
+```
+
+---
+
+# 21. Backend MVP Scope
+
+Current MVP includes:
+
+```txt
+✅ Booking API
+✅ Enquiry API
+✅ Services API
+✅ PostgreSQL
+✅ Prisma ORM
+✅ REST API
+✅ Frontend Integration
+```
+
+---
+
+# 22. Future Expansion Direction
+
+Future backend expansion includes:
+
+* CRM System
+* WhatsApp Automation
+* Email Notification
+* Analytics Dashboard
+* Customer Portal
+* Payment Gateway
+* Appointment Scheduler
+* AI Chatbot
+* Docker Deployment
+* Cloud Hosting
+* Multi-admin Role Management
+
+---
+
+# 23. Current Backend Development Stage
+
+Current stage:
+
+```txt
+Backend API Foundation Stage
+```
+
+Current goals:
+
+* Build API architecture
+* Build database schema
+* Build Prisma structure
+* Complete booking / enquiry / service APIs
+* Integrate with Admin Dashboard
+
+---
+
+# 24. Final System Goal
+
+Final system structure:
+
+```txt
+Frontend Website
+        ↓
+Admin Dashboard
+        ↓
+Backend API Server
+        ↓
+PostgreSQL Database
+```
+
+Final direction:
+
+```txt
+Scalable Fullstack Business Management System
+```

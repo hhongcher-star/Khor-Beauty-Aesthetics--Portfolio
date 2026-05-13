@@ -45,7 +45,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-full w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto',
+          'fixed top-0 left-0 z-50 h-screen w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-in-out lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -60,6 +60,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 Aesthetics
               </p>
             </div>
+
             <Button
               variant="ghost"
               size="icon"
@@ -74,6 +75,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
           <nav className="flex-1 p-4 space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
+
               return (
                 <Link
                   key={item.href}
@@ -86,7 +88,9 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                       : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   )}
                 >
-                  <item.icon className={cn('h-5 w-5', isActive && 'text-primary')} />
+                  <item.icon
+                    className={cn('h-5 w-5', isActive && 'text-primary')}
+                  />
                   {item.label}
                 </Link>
               );
