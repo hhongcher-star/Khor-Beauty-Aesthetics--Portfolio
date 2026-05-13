@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { AdminHeader } from '@/components/admin/admin-header';
 
@@ -21,8 +21,18 @@ export default function AdminLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
-  // Don't show sidebar/header on login page
+  useEffect(() => {
+    if (pathname === '/admin/login') return;
+
+    const token = localStorage.getItem('adminToken');
+
+    if (!token) {
+      router.push('/admin/login');
+    }
+  }, [pathname, router]);
+
   if (pathname === '/admin/login') {
     return <>{children}</>;
   }
@@ -32,9 +42,13 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-background">
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
       <div className="lg:pl-64">
         <AdminHeader title={pageTitle} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="p-4 lg:p-6">{children}</main>
+
+        <main className="p-4 lg:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );

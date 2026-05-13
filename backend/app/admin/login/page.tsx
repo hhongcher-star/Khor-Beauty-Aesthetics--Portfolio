@@ -9,33 +9,60 @@ import { Eye, EyeOff } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setIsLoading(true);
-    
-    // Simulate login - in production, this would call an auth API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    router.push('/admin/dashboard');
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed');
+        return;
+      }
+
+      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('adminUser', JSON.stringify(data.admin));
+
+      router.push('/admin/dashboard');
+    } catch (error) {
+      console.error(error);
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-background to-muted p-4">
-      {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/30 rounded-full blur-3xl" />
       </div>
 
-      {/* Login Card */}
       <div className="relative w-full max-w-md">
         <div className="bg-card rounded-3xl shadow-xl border border-border/50 p-8 space-y-8">
-          {/* Brand */}
           <div className="text-center space-y-2">
             <h1 className="font-serif text-3xl font-semibold tracking-wide text-foreground">
               KHOR BEAUTY
@@ -50,7 +77,6 @@ export default function AdminLoginPage() {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">
@@ -61,7 +87,10 @@ export default function AdminLoginPage() {
                 type="email"
                 placeholder="admin@khorbeauty.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
                 className="h-12 rounded-xl bg-muted/50 border-border/50 focus:border-primary focus:ring-primary"
                 required
               />
@@ -77,7 +106,10 @@ export default function AdminLoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
                   className="h-12 rounded-xl bg-muted/50 border-border/50 focus:border-primary focus:ring-primary pr-12"
                   required
                 />
@@ -100,6 +132,12 @@ export default function AdminLoginPage() {
               </button>
             </div>
 
+            {error && (
+              <p className="text-sm text-red-500 text-center">
+                {error}
+              </p>
+            )}
+
             <Button
               type="submit"
               disabled={isLoading}
@@ -119,7 +157,6 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          {/* Footer */}
           <p className="text-center text-xs text-muted-foreground">
             Premium Home-Service Medical Aesthetics
           </p>

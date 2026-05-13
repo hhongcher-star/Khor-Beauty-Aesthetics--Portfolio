@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -31,10 +31,16 @@ const navItems = [
 
 export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    router.push('/admin/login');
+  };
 
   return (
     <>
-      {/* Mobile overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 lg:hidden"
@@ -42,7 +48,6 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           'fixed top-0 left-0 z-50 h-screen w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-in-out lg:translate-x-0',
@@ -50,7 +55,6 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b border-sidebar-border">
             <div>
               <h1 className="font-serif text-xl font-semibold tracking-wide text-foreground">
@@ -71,7 +75,6 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
             </Button>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -97,15 +100,15 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
             })}
           </nav>
 
-          {/* Logout */}
           <div className="p-4 border-t border-sidebar-border">
-            <Link
-              href="/admin/login"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-all"
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-all"
             >
               <LogOut className="h-5 w-5" />
               Logout
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
