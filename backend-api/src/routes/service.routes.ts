@@ -1,5 +1,6 @@
 import express from "express";
 import prisma from "../utils/prisma";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST create service
-router.post("/", async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   const { name, description, price, active } = req.body;
 
   const service = await prisma.service.create({
@@ -44,7 +45,7 @@ router.post("/", async (req, res) => {
   });
 });
 
-// PUT update service
+// Prouter.put("/:id", authMiddleware, async (req, res) => {UT update service
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { name, description, price, active } = req.body;
@@ -66,7 +67,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE service
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
 
   await prisma.service.delete({

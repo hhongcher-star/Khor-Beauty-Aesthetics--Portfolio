@@ -1,15 +1,16 @@
 import express from "express";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
-// GET all enquiries
-router.get("/", (req, res) => {
+// GET all enquiries - admin only
+router.get("/", authMiddleware, (req, res) => {
   res.json({
     message: "Get all enquiries",
   });
 });
 
-// POST enquiry
+// POST enquiry - public customer form
 router.post("/", (req, res) => {
   const enquiryData = req.body;
 

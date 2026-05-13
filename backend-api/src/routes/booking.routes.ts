@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { authMiddleware } from '../middleware/auth.middleware';
 import {
   getBookings,
   addBooking,
@@ -8,9 +9,9 @@ import {
 
 const router = Router();
 
-router.get('/', getBookings);
+router.get('/', authMiddleware, getBookings);
 router.post('/', addBooking);
-router.put('/:id', editBooking);
-router.delete('/:id', removeBooking);
+router.put('/:id', authMiddleware, editBooking);
+router.delete('/:id', authMiddleware, removeBooking);
 
 export default router;
