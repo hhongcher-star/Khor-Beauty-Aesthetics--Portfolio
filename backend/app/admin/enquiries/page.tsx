@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,25 +21,62 @@ import {
   Instagram,
   Globe,
 } from 'lucide-react';
-import { mockEnquiries, type Enquiry } from '@/lib/mock-data';
+import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api';
 
-const statusOptions = ['All', 'New', 'Contacted', 'Closed'];
+const statusOptions = ['All', 'new', 'contacted', 'closed'];
 const sourceOptions = ['All', 'Website Form', 'WhatsApp', 'Instagram', 'Manual'];
 
 export default function EnquiriesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sourceFilter, setSourceFilter] = useState('All');
+  const [enquiries, setEnquiries] = useState<any[]>([]);
+  useEffect(() => {
+  fetchEnquiries();
+}, []);
 
-  const filteredEnquiries = mockEnquiries.filter((enquiry) => {
-    const matchesSearch =
-      enquiry.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enquiry.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enquiry.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || enquiry.status === statusFilter;
-    const matchesSource = sourceFilter === 'All' || enquiry.source === sourceFilter;
-    return matchesSearch && matchesStatus && matchesSource;
-  });
+const fetchEnquiries = async () => {
+  try {
+    const response = await apiFetch('/enquiries');
+
+    if (Array.isArray(response)) {
+      setEnquiries(response);
+    } else {
+      setEnquiries(response.data || []);
+    }
+  } catch (error) {
+    console.error(error);
+    setEnquiries([]);
+  }
+};
+const handleMarkContacted = async (id: string) => {
+  try {
+    await apiFetch(`/enquiries/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        status: 'contacted',
+      }),
+    });
+
+    fetchEnquiries();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const filteredEnquiries = enquiries.filter((enquiry) => {
+  const matchesSearch =
+    enquiry.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    enquiry.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    enquiry.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const matchesStatus =
+    statusFilter === 'All' ||
+    enquiry.status === statusFilter;
+
+  return matchesSearch && matchesStatus;
+});
 
   return (
     <div className="space-y-6">
@@ -92,24 +129,24 @@ export default function EnquiriesPage() {
       {/* Stats Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-foreground">{mockEnquiries.length}</p>
+          <p className="text-2xl font-semibold text-foreground">{enquiries.length}</p>
           <p className="text-xs text-muted-foreground">Total Enquiries</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-pink-600">
-            {mockEnquiries.filter((e) => e.status === 'New').length}
+            {enquiries.filter((e) => e.status === 'new').length}
           </p>
           <p className="text-xs text-muted-foreground">New</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-blue-600">
-            {mockEnquiries.filter((e) => e.status === 'Contacted').length}
+            {enquiries.filter((e) => e.status === 'contacted').length}
           </p>
           <p className="text-xs text-muted-foreground">Contacted</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-gray-600">
-            {mockEnquiries.filter((e) => e.status === 'Closed').length}
+            {enquiries.filter((e) => e.status === 'closed').length}
           </p>
           <p className="text-xs text-muted-foreground">Closed</p>
         </div>
@@ -118,7 +155,11 @@ export default function EnquiriesPage() {
       {/* Enquiries Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredEnquiries.map((enquiry) => (
-          <EnquiryCard key={enquiry.id} enquiry={enquiry} />
+          <EnquiryCard
+  key={enquiry.id}
+  enquiry={enquiry}
+  onMarkContacted={handleMarkContacted}
+/>
         ))}
       </div>
 
@@ -133,7 +174,15 @@ export default function EnquiriesPage() {
   );
 }
 
-function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
+function EnquiryCard({
+  enquiry,
+  onMarkContacted,
+}: {
+  enquiry: any;
+  onMarkContacted: (id: string) => void;
+}) {
+  
+
   const getSourceIcon = (source: string) => {
     switch (source) {
       case 'WhatsApp':
@@ -160,8 +209,8 @@ function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
           <div>
             <p className="font-medium text-foreground">{enquiry.customerName}</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {getSourceIcon(enquiry.source)}
-              <span>{enquiry.source}</span>
+              {getSourceIcon('Website Form')}
+<span>Website Form</span>
             </div>
           </div>
         </div>
@@ -187,16 +236,17 @@ function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-border/50">
-        <p className="text-xs text-muted-foreground">{enquiry.dateReceived}</p>
+        <p className="text-xs text-muted-foreground">{new Date(enquiry.createdAt).toLocaleDateString()}</p>
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            className="h-8 rounded-lg text-xs border-border/50 hover:bg-secondary/30"
-          >
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Mark Contacted
-          </Button>
+  variant="outline"
+  size="sm"
+  onClick={() => onMarkContacted(enquiry.id)}
+  className="h-8 rounded-lg text-xs border-border/50 hover:bg-secondary/30"
+>
+  <CheckCircle className="h-3 w-3 mr-1" />
+  Mark Contacted
+</Button>
           <Button
             variant="outline"
             size="sm"

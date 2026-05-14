@@ -19,13 +19,14 @@ model Booking {
 }
 
 model Enquiry {
-  id          String   @id @default(cuid())
+  id           String   @id @default(cuid())
   customerName String
-  email       String
-  phone       String
-  message     String
-  status      String   @default("new")
-  createdAt   DateTime @default(now())
+  email        String
+  phone        String
+  message      String
+  source       String   @default("Website Form")
+  status       String   @default("new")
+  createdAt    DateTime @default(now())
 }
 
 model Service {
@@ -33,6 +34,7 @@ model Service {
   name        String
   description String
   price       Float
+  category    String?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
 }

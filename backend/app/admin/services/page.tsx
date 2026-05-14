@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,9 +30,9 @@ import {
   Trash2,
   Clock,
   Sparkles,
-  ImageIcon,
 } from 'lucide-react';
-import { mockServices, type Service } from '@/lib/mock-data';
+import { apiFetch } from '@/lib/api';
+
 
 const categoryOptions = [
   'All',
@@ -46,18 +46,137 @@ const categoryOptions = [
 ];
 
 export default function ServicesPage() {
+  const [services, setServices] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  const [serviceName, setServiceName] = useState('');
+  const [serviceDescription, setServiceDescription] = useState('');
+  const [servicePrice, setServicePrice] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<any | null>(null);
+  const [editServiceName, setEditServiceName] = useState('');
+  const [editServiceDescription, setEditServiceDescription] = useState('');
+  const [editServicePrice, setEditServicePrice] = useState('');
+  const [editIsActive, setEditIsActive] = useState(true);
+  const [serviceCategory, setServiceCategory] = useState('');
+  const [editServiceCategory, setEditServiceCategory] = useState('');
 
-  const filteredServices = mockServices.filter((service) => {
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+
+  const fetchServices = async () => {
+  try {
+    const response = await apiFetch('/services');
+
+    if (Array.isArray(response)) {
+      setServices(response);
+    } else {
+      setServices(response.data || []);
+    }
+  } catch (error) {
+    console.error(error);
+    setServices([]);
+  }
+};
+
+  const filteredServices = services.filter((service) => {
     const matchesSearch =
       service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'All' || service.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+  const handleAddService = async () => {
+  if (!serviceName || !serviceDescription || !servicePrice || !serviceCategory) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+
+  if (Number(servicePrice) <= 0) {
+    alert('Price must be greater than 0.');
+    return;
+  }
+
+  if (!categoryOptions.slice(1).includes(serviceCategory)) {
+    alert('Invalid category selected.');
+    return;
+  }
+
+  try {
+    await apiFetch('/services', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: serviceName.trim(),
+        description: serviceDescription.trim(),
+        price: Number(servicePrice),
+        category: serviceCategory,
+        active: isActive,
+      }),
+    });
+
+    setServiceName('');
+    setServiceDescription('');
+    setServicePrice('');
+    setServiceCategory('');
+    setIsActive(true);
+
+    setIsAddDialogOpen(false);
+    fetchServices();
+  } catch (error) {
+    console.error(error);
+  }
+};
+  const handleDeleteService = async () => {
+  if (!deleteServiceId) return;
+
+  try {
+    await apiFetch(`/services/${deleteServiceId}`, {
+      method: 'DELETE',
+    });
+
+    setDeleteServiceId(null);
+
+    fetchServices();
+  } catch (error) {
+    console.error(error);
+  }
+};
+const handleEditClick = (service: any) => {
+  setSelectedService(service);
+  setEditServiceName(service.name);
+  setEditServiceDescription(service.description);
+  setEditServicePrice(String(service.price));
+  setEditIsActive(service.active);
+  setIsEditDialogOpen(true);
+};
+const handleUpdateService = async () => {
+  if (!selectedService) return;
+
+  try {
+    await apiFetch(`/services/${selectedService.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: editServiceName,
+        description: editServiceDescription,
+        price: Number(editServicePrice),
+        active: editIsActive,
+      }),
+    });
+
+    setIsEditDialogOpen(false);
+    setSelectedService(null);
+
+    fetchServices();
+  } catch (error) {
+    console.error(error);
+  }
+};
+const [deleteServiceId, setDeleteServiceId] = useState<string | null>(null);
+
 
   return (
     <div className="space-y-6">
@@ -102,11 +221,14 @@ export default function ServicesPage() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="serviceName">Service Name</Label>
-                  <Input id="serviceName" placeholder="e.g. Skin Booster Treatment" className="rounded-xl" />
+                  <Input id="serviceName" value={serviceName} onChange={(e) => setServiceName(e.target.value)} placeholder="e.g. Skin Booster Treatment" className="rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select>
+                  <Select
+  value={serviceCategory}
+  onValueChange={setServiceCategory}
+>
                     <SelectTrigger className="rounded-xl">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
@@ -123,6 +245,8 @@ export default function ServicesPage() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
+                    value={serviceDescription}
+                      onChange={(e) => setServiceDescription(e.target.value)}
                     placeholder="Describe this service..."
                     className="rounded-xl min-h-[100px]"
                   />
@@ -130,21 +254,14 @@ export default function ServicesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">Price (RM)</Label>
-                    <Input id="price" type="number" placeholder="288" className="rounded-xl" />
+                    <Input id="price" type="number" value={servicePrice} onChange={(e) => setServicePrice(e.target.value)} placeholder="288" className="rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="duration">Duration</Label>
                     <Input id="duration" placeholder="90 mins" className="rounded-xl" />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Service Image</Label>
-                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                    <ImageIcon className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Click to upload image</p>
-                    <p className="text-xs text-muted-foreground/70">PNG, JPG up to 5MB</p>
-                  </div>
-                </div>
+                
                 <div className="flex items-center justify-between py-2">
                   <div>
                     <Label htmlFor="active">Active Status</Label>
@@ -157,36 +274,37 @@ export default function ServicesPage() {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl">
                   Cancel
                 </Button>
-                <Button onClick={() => setIsAddDialogOpen(false)} className="rounded-xl bg-primary hover:bg-primary/90">
+                <Button onClick={handleAddService} className="rounded-xl bg-primary hover:bg-primary/90">
                   Save Service
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          
         </div>
       </div>
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-foreground">{mockServices.length}</p>
+          <p className="text-2xl font-semibold text-foreground">{services.length}</p>
           <p className="text-xs text-muted-foreground">Total Services</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-emerald-600">
-            {mockServices.filter((s) => s.isActive).length}
+            {services.filter((s) => s.active).length}
           </p>
           <p className="text-xs text-muted-foreground">Active</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-gray-600">
-            {mockServices.filter((s) => !s.isActive).length}
+            {services.filter((s) => !s.active).length}
           </p>
           <p className="text-xs text-muted-foreground">Inactive</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-foreground">
-            {new Set(mockServices.map((s) => s.category)).size}
+            {new Set(services.map((s) => s.category)).size}
           </p>
           <p className="text-xs text-muted-foreground">Categories</p>
         </div>
@@ -195,7 +313,12 @@ export default function ServicesPage() {
       {/* Services Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredServices.map((service) => (
-          <ServiceCard key={service.id} service={service} />
+          <ServiceCard
+  key={service.id}
+  service={service}
+  onEdit={handleEditClick}
+  onDelete={(id) => setDeleteServiceId(id)}
+/>
         ))}
       </div>
 
@@ -204,20 +327,137 @@ export default function ServicesPage() {
           <Sparkles className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
           <p className="text-muted-foreground">No services found</p>
           <p className="text-sm text-muted-foreground/70">Try adjusting your search or filters</p>
+          
         </div>
       )}
+
+      <Dialog
+        open={!!deleteServiceId}
+        onOpenChange={() => setDeleteServiceId(null)}
+      >
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Delete Service</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this service?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteServiceId(null)}
+              className="rounded-xl"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={handleDeleteService}
+              className="rounded-xl bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+  open={isEditDialogOpen}
+  onOpenChange={(open) => {
+    setIsEditDialogOpen(open);
+
+    if (!open) {
+      setSelectedService(null);
+    }
+  }}
+>
+  <DialogContent className="sm:max-w-[550px] rounded-2xl">
+    <DialogHeader>
+      <DialogTitle>Edit Service</DialogTitle>
+      <DialogDescription>
+        Update this service information.
+      </DialogDescription>
+    </DialogHeader>
+
+    <div className="grid gap-4 py-4">
+      <div className="space-y-2">
+        <Label>Service Name</Label>
+        <Input
+          value={editServiceName}
+          onChange={(e) => setEditServiceName(e.target.value)}
+          className="rounded-xl"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Textarea
+          value={editServiceDescription}
+          onChange={(e) => setEditServiceDescription(e.target.value)}
+          className="rounded-xl min-h-[100px]"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Price (RM)</Label>
+        <Input
+          type="number"
+          value={editServicePrice}
+          onChange={(e) => setEditServicePrice(e.target.value)}
+          className="rounded-xl"
+        />
+      </div>
+
+      <div className="flex items-center justify-between py-2">
+        <div>
+          <Label>Active Status</Label>
+          <p className="text-xs text-muted-foreground">
+            Service will be visible on website
+          </p>
+        </div>
+        <Switch checked={editIsActive} onCheckedChange={setEditIsActive} />
+      </div>
+    </div>
+
+    <DialogFooter>
+      <Button
+        variant="outline"
+        onClick={() => setIsEditDialogOpen(false)}
+        className="rounded-xl"
+      >
+        Cancel
+      </Button>
+
+      <Button
+        onClick={handleUpdateService}
+        className="rounded-xl bg-primary hover:bg-primary/90"
+      >
+        Save Changes
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
     </div>
   );
 }
 
-function ServiceCard({ service }: { service: Service }) {
+function ServiceCard({
+  service,
+  onEdit,
+  onDelete,
+}: {
+  service: any;
+  onEdit: (service: any) => void;
+  onDelete: (id: string) => void;
+}) {
   return (
     <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
       {/* Image Placeholder */}
       <div className="relative h-40 bg-gradient-to-br from-secondary/50 via-muted to-accent/30 flex items-center justify-center">
         <Sparkles className="h-12 w-12 text-primary/30" />
         <div className="absolute top-3 right-3">
-          <StatusBadge status={service.isActive ? 'Active' : 'Inactive'} />
+          <StatusBadge status={service.active ? 'Active' : 'Inactive'} />
         </div>
       </div>
 
@@ -244,6 +484,7 @@ function ServiceCard({ service }: { service: Service }) {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => onEdit(service)}
             className="flex-1 h-9 rounded-lg text-xs border-border/50 hover:bg-secondary/30"
           >
             <Pencil className="h-3 w-3 mr-1" />
@@ -252,6 +493,7 @@ function ServiceCard({ service }: { service: Service }) {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => onDelete(service.id)}
             className="h-9 rounded-lg text-xs border-red-200 text-red-600 hover:bg-red-50"
           >
             <Trash2 className="h-3 w-3" />
