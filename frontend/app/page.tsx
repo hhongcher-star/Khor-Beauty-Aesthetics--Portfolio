@@ -7,6 +7,7 @@ import { BeforeAfterGallery } from '@/components/home/before-after-gallery'
 import { Testimonials } from '@/components/home/testimonials'
 import { FAQ } from '@/components/home/faq'
 import { CTASection } from '@/components/home/cta-section'
+export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (

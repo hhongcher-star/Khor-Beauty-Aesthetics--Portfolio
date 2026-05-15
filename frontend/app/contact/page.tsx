@@ -2,6 +2,7 @@
 import { Footer } from '@/components/layout/footer'
 import { ContactHero } from '@/components/contact/contact-hero'
 import { ContactContent } from '@/components/contact/contact-content'
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: 'Contact Us | LumiÃ¨re Beauty Clinic',

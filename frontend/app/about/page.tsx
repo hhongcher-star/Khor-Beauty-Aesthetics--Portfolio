@@ -5,6 +5,7 @@ import { OurStory } from '@/components/about/our-story'
 import { OurTeam } from '@/components/about/our-team'
 import { OurValues } from '@/components/about/our-values'
 import { CTASection } from '@/components/home/cta-section'
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: 'About Us | LumiÃ¨re Beauty Clinic',

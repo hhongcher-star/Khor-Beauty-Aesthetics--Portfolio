@@ -5,6 +5,7 @@ import { ServiceCategories } from '@/components/services/service-categories'
 import { AllServices } from '@/components/services/all-services'
 import { CTASection } from '@/components/home/cta-section'
 import { apiRequest } from '@/lib/api'
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: 'Our Services | Lumière Beauty Clinic',
