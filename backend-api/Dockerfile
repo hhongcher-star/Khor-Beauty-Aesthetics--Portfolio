@@ -14,4 +14,4 @@ RUN npm run db:seed
 
 EXPOSE 5000
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npx prisma db push && npm run db:seed && npm start"]
