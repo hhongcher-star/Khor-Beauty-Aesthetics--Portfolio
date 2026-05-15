@@ -2,6 +2,7 @@
 import { Footer } from '@/components/layout/footer'
 import { BookingForm } from '@/components/booking/booking-form'
 import { apiRequest } from '@/lib/api'
+export const dynamic = "force-dynamic";``
 
 export const metadata = {
   title: 'Book Appointment | Lumière Beauty Clinic',
