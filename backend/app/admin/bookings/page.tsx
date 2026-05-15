@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -17,6 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+DropdownMenuSubContent,
+DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
   Dialog,
@@ -38,18 +42,75 @@ import {
   RefreshCw,
   Calendar,
 } from 'lucide-react';
-import { mockBookings, type Booking } from '@/lib/mock-data';
-
+import { apiFetch } from '@/lib/api';
+type Booking = {
+  id: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  service: string;
+  status: string;
+  paymentStatus?: string;
+  appointment: string;
+};
 const statusOptions = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled'];
 const paymentStatusOptions = ['All', 'Unpaid', 'Deposit Paid', 'Fully Paid', 'Refunded'];
 
 export default function BookingsPage() {
+
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [paymentFilter, setPaymentFilter] = useState('All');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
-  const filteredBookings = mockBookings.filter((booking) => {
+  useEffect(() => {
+    
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      const response = await apiFetch('/bookings');
+
+if (Array.isArray(response)) {
+  setBookings(response);
+} else {
+  setBookings(response.data || []);
+}
+    } catch (error) {
+      console.error(error);
+
+    }
+  };
+  const handleViewBooking = (booking: Booking) => {
+  setSelectedBooking(booking);
+  setIsViewDialogOpen(true);
+};
+const [addForm, setAddForm] = useState({
+  customerName: '',
+  email: '',
+  phone: '',
+  service: '',
+  date: '',
+  time: '',
+});
+const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+const [editForm, setEditForm] = useState({
+  id: '',
+  customerName: '',
+  email: '',
+  phone: '',
+  service: '',
+  date: '',
+  time: '',
+  status: 'Pending',
+  paymentStatus: 'Unpaid',
+});
+  const filteredBookings = bookings.filter((booking) => {
     const matchesSearch =
       booking.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,6 +119,100 @@ export default function BookingsPage() {
     const matchesPayment = paymentFilter === 'All' || booking.paymentStatus === paymentFilter;
     return matchesSearch && matchesStatus && matchesPayment;
   });
+  const handleDeleteBooking = async (id: string) => {
+  try {
+    await apiFetch(`/bookings/${id}`, {
+      method: 'DELETE',
+    });
+
+    fetchBookings();
+  } catch (error) {
+    console.error(error);
+    
+  }
+};
+const handleCreateBooking = async () => {
+  try {
+    await apiFetch('/bookings', {
+      method: 'POST',
+      body: JSON.stringify({
+        customerName: addForm.customerName,
+        email: addForm.email,
+        phone: addForm.phone,
+        service: addForm.service,
+        appointment: new Date(`${addForm.date}T${addForm.time}`).toISOString(),
+        status: 'Pending',
+        paymentStatus: 'Unpaid',
+      }),
+    });
+
+    setIsAddDialogOpen(false);
+    setAddForm({
+      customerName: '',
+      email: '',
+      phone: '',
+      service: '',
+      date: '',
+      time: '',
+    });
+
+    fetchBookings();
+  } catch (error) {
+    console.error(error);
+  }
+};
+const handleUpdateStatus = async (id: string, status: string) => {
+  try {
+    await apiFetch(`/bookings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        status,
+      }),
+    });
+
+    fetchBookings();
+  } catch (error) {
+    console.error(error);
+  }
+};
+const handleOpenEdit = (booking: Booking) => {
+  const appointment = new Date(booking.appointment);
+
+  setEditForm({
+    id: booking.id,
+    customerName: booking.customerName,
+    email: booking.email,
+    phone: booking.phone,
+    service: booking.service,
+    date: appointment.toISOString().split('T')[0],
+    time: appointment.toTimeString().slice(0, 5),
+    status: booking.status,
+    paymentStatus: booking.paymentStatus || 'Unpaid',
+  });
+
+  setIsEditDialogOpen(true);
+};
+const handleEditBooking = async () => {
+  try {
+    await apiFetch(`/bookings/${editForm.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        customerName: editForm.customerName,
+        email: editForm.email,
+        phone: editForm.phone,
+        service: editForm.service,
+        appointment: new Date(`${editForm.date}T${editForm.time}`).toISOString(),
+        status: editForm.status,
+        paymentStatus: editForm.paymentStatus,
+      }),
+    });
+
+    setIsEditDialogOpen(false);
+    fetchBookings();
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   return (
     <div className="space-y-6">
@@ -115,20 +270,20 @@ export default function BookingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Customer Name</Label>
-                    <Input id="name" placeholder="Full name" className="rounded-xl" />
+                    <Input id="name" placeholder="Full name"  value={addForm.customerName} onChange={(e) => setAddForm({ ...addForm, customerName: e.target.value })} className="rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" placeholder="012-345 6789" className="rounded-xl" />
+                    <Input id="phone" placeholder="012-345 6789"value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} className="rounded-xl" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="email@example.com" className="rounded-xl" />
+                  <Input id="email" type="email" placeholder="email@example.com"   value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} className="rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="service">Service</Label>
-                  <Select>
+                  <Select  value={addForm.service} onValueChange={(value) =>setAddForm({ ...addForm, service: value })}>
                     <SelectTrigger className="rounded-xl">
                       <SelectValue placeholder="Select a service" />
                     </SelectTrigger>
@@ -144,11 +299,11 @@ export default function BookingsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date">Preferred Date</Label>
-                    <Input id="date" type="date" className="rounded-xl" />
+                    <Input id="date" type="date"value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })} className="rounded-xl" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="time">Preferred Time</Label>
-                    <Input id="time" type="time" className="rounded-xl" />
+                    <Input id="time" type="time" value={addForm.time} onChange={(e) => setAddForm({ ...addForm, time: e.target.value })}  className="rounded-xl" />
                   </div>
                 </div>
               </div>
@@ -156,7 +311,7 @@ export default function BookingsPage() {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl">
                   Cancel
                 </Button>
-                <Button onClick={() => setIsAddDialogOpen(false)} className="rounded-xl bg-primary hover:bg-primary/90">
+                <Button onClick={handleCreateBooking} className="rounded-xl bg-primary hover:bg-primary/90">
                   Create Booking
                 </Button>
               </DialogFooter>
@@ -168,24 +323,24 @@ export default function BookingsPage() {
       {/* Stats Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-foreground">{mockBookings.length}</p>
+          <p className="text-2xl font-semibold text-foreground">{bookings.length}</p>
           <p className="text-xs text-muted-foreground">Total Bookings</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-amber-600">
-            {mockBookings.filter((b) => b.status === 'Pending').length}
+            {bookings.filter((b) => b.status === 'Pending').length}
           </p>
           <p className="text-xs text-muted-foreground">Pending</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-emerald-600">
-            {mockBookings.filter((b) => b.status === 'Confirmed').length}
+            {bookings.filter((b) => b.status === 'Confirmed').length}
           </p>
           <p className="text-xs text-muted-foreground">Confirmed</p>
         </div>
         <div className="bg-card rounded-xl p-4 border border-border/50">
           <p className="text-2xl font-semibold text-blue-600">
-            {mockBookings.filter((b) => b.status === 'Completed').length}
+            {bookings.filter((b) => b.status === 'Completed').length}
           </p>
           <p className="text-xs text-muted-foreground">Completed</p>
         </div>
@@ -219,7 +374,14 @@ export default function BookingsPage() {
             </thead>
             <tbody className="divide-y divide-border/50">
               {filteredBookings.map((booking) => (
-                <BookingRow key={booking.id} booking={booking} />
+              <BookingRow
+  key={booking.id}
+  booking={booking}
+  onDelete={handleDeleteBooking}
+  onView={handleViewBooking}
+  onUpdateStatus={handleUpdateStatus}
+  onEdit={handleOpenEdit}
+/>
               ))}
             </tbody>
           </table>
@@ -231,12 +393,254 @@ export default function BookingsPage() {
             <p className="text-sm text-muted-foreground/70">Try adjusting your search or filters</p>
           </div>
         )}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+  <DialogContent className="sm:max-w-[650px] rounded-2xl">
+    <DialogHeader>
+      <DialogTitle className="font-serif text-2xl">
+        Booking Details
+      </DialogTitle>
+      <DialogDescription>
+        Review the customer appointment and payment information.
+      </DialogDescription>
+    </DialogHeader>
+
+    {selectedBooking && (
+      <div className="space-y-6 py-2">
+        <div className="rounded-2xl border border-border/50 bg-muted/20 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Customer
+              </p>
+              <h3 className="text-xl font-semibold text-foreground">
+                {selectedBooking.customerName}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {selectedBooking.email}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {selectedBooking.phone}
+              </p>
+            </div>
+
+            <StatusBadge status={selectedBooking.status} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Service</p>
+            <p className="font-medium">{selectedBooking.service}</p>
+          </div>
+
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Payment Status</p>
+            <StatusBadge status={selectedBooking.paymentStatus || 'Unpaid'} />
+          </div>
+
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Appointment Date</p>
+            <p className="font-medium">
+              {new Date(selectedBooking.appointment).toLocaleDateString()}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">Appointment Time</p>
+            <p className="font-medium">
+              {new Date(selectedBooking.appointment).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsViewDialogOpen(false)}
+            className="rounded-xl"
+          >
+            Close
+          </Button>
+
+          <Button className="rounded-xl">
+            Edit Booking
+          </Button>
+        </DialogFooter>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
+<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+  <DialogContent className="sm:max-w-[500px] rounded-2xl">
+    <DialogHeader>
+      <DialogTitle className="font-serif text-xl">Edit Booking</DialogTitle>
+      <DialogDescription>
+        Update the customer booking details.
+      </DialogDescription>
+    </DialogHeader>
+
+    <div className="grid gap-4 py-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Customer Name</Label>
+          <Input
+            value={editForm.customerName}
+            onChange={(e) =>
+              setEditForm({ ...editForm, customerName: e.target.value })
+            }
+            className="rounded-xl"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Phone Number</Label>
+          <Input
+            value={editForm.phone}
+            onChange={(e) =>
+              setEditForm({ ...editForm, phone: e.target.value })
+            }
+            className="rounded-xl"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Email</Label>
+        <Input
+          type="email"
+          value={editForm.email}
+          onChange={(e) =>
+            setEditForm({ ...editForm, email: e.target.value })
+          }
+          className="rounded-xl"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Service</Label>
+        <Select
+          value={editForm.service}
+          onValueChange={(value) =>
+            setEditForm({ ...editForm, service: value })
+          }
+        >
+          <SelectTrigger className="rounded-xl">
+            <SelectValue placeholder="Select a service" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="skin-booster">Skin Booster Treatment</SelectItem>
+            <SelectItem value="korean-glow">Korean Glow Facial</SelectItem>
+            <SelectItem value="brightening">Brightening Treatment</SelectItem>
+            <SelectItem value="anti-aging">Anti-Aging Rejuvenation</SelectItem>
+            <SelectItem value="hydration">Hydration Facial</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Date</Label>
+          <Input
+            type="date"
+            value={editForm.date}
+            onChange={(e) =>
+              setEditForm({ ...editForm, date: e.target.value })
+            }
+            className="rounded-xl"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Time</Label>
+          <Input
+            type="time"
+            value={editForm.time}
+            onChange={(e) =>
+              setEditForm({ ...editForm, time: e.target.value })
+            }
+            className="rounded-xl"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Status</Label>
+          <Select
+            value={editForm.status}
+            onValueChange={(value) =>
+              setEditForm({ ...editForm, status: value })
+            }
+          >
+            <SelectTrigger className="rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="Confirmed">Confirmed</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+              <SelectItem value="Cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Payment</Label>
+          <Select
+            value={editForm.paymentStatus}
+            onValueChange={(value) =>
+              setEditForm({ ...editForm, paymentStatus: value })
+            }
+          >
+            <SelectTrigger className="rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Unpaid">Unpaid</SelectItem>
+              <SelectItem value="Deposit Paid">Deposit Paid</SelectItem>
+              <SelectItem value="Fully Paid">Fully Paid</SelectItem>
+              <SelectItem value="Refunded">Refunded</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+
+    <DialogFooter>
+      <Button
+        variant="outline"
+        onClick={() => setIsEditDialogOpen(false)}
+        className="rounded-xl"
+      >
+        Cancel
+      </Button>
+      <Button onClick={handleEditBooking} className="rounded-xl">
+        Save Changes
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
       </div>
     </div>
   );
 }
 
-function BookingRow({ booking }: { booking: Booking }) {
+function BookingRow({
+  booking,
+  onDelete,
+  onView,
+  onUpdateStatus,
+  onEdit,
+}: {
+  booking: Booking;
+  onDelete: (id: string) => void;
+  onView: (booking: Booking) => void;
+  onUpdateStatus: (id: string, status: string) => void;
+  onEdit: (booking: Booking) => void;
+}) {
   return (
     <tr className="hover:bg-muted/20 transition-colors">
       <td className="px-5 py-4">
@@ -250,8 +654,16 @@ function BookingRow({ booking }: { booking: Booking }) {
         <p className="text-sm text-foreground">{booking.service}</p>
       </td>
       <td className="px-5 py-4">
-        <p className="text-sm text-foreground">{booking.date}</p>
-        <p className="text-xs text-muted-foreground">{booking.time}</p>
+        <p className="text-sm text-foreground">
+  {new Date(booking.appointment).toLocaleDateString()}
+</p>
+
+<p className="text-xs text-muted-foreground">
+  {new Date(booking.appointment).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}
+</p>
       </td>
       <td className="px-5 py-4">
         <StatusBadge status={booking.status} />
@@ -267,23 +679,40 @@ function BookingRow({ booking }: { booking: Booking }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
-            <DropdownMenuItem className="cursor-pointer">
-              <Eye className="h-4 w-4 mr-2" />
-              View Details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit Booking
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Update Status
-            </DropdownMenuItem>
+            <DropdownMenuItem
+  onClick={() => onView(booking)}
+  className="cursor-pointer"
+>
+  <Eye className="h-4 w-4 mr-2" />
+  View Details
+</DropdownMenuItem>
+            <DropdownMenuItem
+  onClick={() => onEdit(booking)}
+  className="cursor-pointer"
+>
+  <Pencil className="h-4 w-4 mr-2" />
+  Edit Booking
+</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Booking
-            </DropdownMenuItem>
+
+{['Pending', 'Confirmed', 'Completed', 'Cancelled'].map((status) => (
+  <DropdownMenuItem
+    key={status}
+    onClick={() => onUpdateStatus(booking.id, status)}
+    className="cursor-pointer"
+  >
+    <RefreshCw className="h-4 w-4 mr-2" />
+    Mark as {status}
+  </DropdownMenuItem>
+))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+  onClick={() => onDelete(booking.id)}
+  className="cursor-pointer text-red-600 focus:text-red-600"
+>
+  <Trash2 className="h-4 w-4 mr-2" />
+  Delete Booking
+</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </td>

@@ -1,0 +1,355 @@
+可以，下面这份你可以直接放进 README / project documentation。
+
+# Khor Beauty Backend Logic & Security Documentation
+
+## 1. Backend Overview
+
+This backend is built using **Node.js, Express.js, TypeScript, Prisma ORM, JWT authentication, and middleware-based security controls**. The backend acts as the API layer for the Khor Beauty admin system, supporting booking management, customer enquiries, service management, payment records, and admin authentication. The current backend project includes production-relevant dependencies such as `bcrypt`, `jsonwebtoken`, `cors`, `dotenv`, `prisma`, and Express-related TypeScript packages. 
+
+---
+
+## 2. Backend Architecture Logic
+
+The backend follows a modular structure:
+
+```txt
+Frontend Admin Panel
+        ↓
+Express API Routes
+        ↓
+Controllers
+        ↓
+Services / Business Logic
+        ↓
+Prisma ORM
+        ↓
+Database
+```
+
+Each module is separated by responsibility:
+
+```txt
+/api/auth       → Admin login and token generation
+/api/bookings   → Booking management
+/api/enquiries  → Customer enquiry management
+/api/services   → Beauty service management
+/api/payments   → Payment record management
+```
+
+This structure keeps the backend clean because route handling, business logic, and database operations are not mixed together.
+
+---
+
+## 3. Authentication Logic
+
+The backend uses **JWT-based authentication**.
+
+When an admin logs in successfully:
+
+```txt
+1. Admin submits email and password
+2. Backend checks admin record
+3. Password is verified using bcrypt
+4. JWT token is generated
+5. Frontend stores token
+6. Protected API requests send token via Authorization header
+```
+
+Example header:
+
+```txt
+Authorization: Bearer <token>
+```
+
+Protected routes are guarded by `authMiddleware`. If no token or invalid token is provided, the backend returns:
+
+```json
+{
+  "success": false,
+  "message": "Unauthorized"
+}
+```
+
+---
+
+## 4. Security Controls Implemented
+
+### 4.1 Helmet
+
+`helmet()` is used to add secure HTTP headers.
+
+Purpose:
+
+```txt
+- Hide Express fingerprint
+- Reduce clickjacking risk
+- Improve browser-level protection
+- Add basic security headers
+```
+
+---
+
+### 4.2 CORS Restriction
+
+CORS is restricted to the frontend origin only:
+
+```ts
+origin: ["http://localhost:3000"]
+```
+
+This prevents random external websites from calling the backend API directly through browser requests.
+
+In production, this should be updated to:
+
+```ts
+origin: [
+  "http://localhost:3000",
+  "https://your-production-domain.com"
+]
+```
+
+---
+
+### 4.3 Rate Limiting
+
+A global rate limiter is applied:
+
+```txt
+100 requests per 15 minutes per IP
+```
+
+Purpose:
+
+```txt
+- Reduce API abuse
+- Reduce brute-force attempts
+- Protect backend from excessive repeated requests
+- Provide basic DDOS mitigation
+```
+
+---
+
+### 4.4 JWT Secret in Environment Variable
+
+The JWT secret is stored in `.env` instead of being hardcoded.
+
+Example:
+
+```env
+JWT_SECRET=your_secret_key
+```
+
+This improves security because sensitive credentials are not exposed in source code.
+
+---
+
+### 4.5 Password Hashing
+
+Admin passwords are hashed using `bcrypt`.
+
+This means raw passwords are not stored directly in the database.
+
+Login verification flow:
+
+```txt
+Plain password entered by admin
+        ↓
+Compared with hashed password
+        ↓
+If matched, login success
+```
+
+---
+
+### 4.6 Auth Middleware
+
+Admin-only routes are protected using middleware.
+
+Protected routes include:
+
+```txt
+/api/bookings
+/api/enquiries
+/api/services
+/api/payments
+```
+
+The `/api/auth` route remains public because users need it to log in.
+
+---
+
+### 4.7 Global Error Handler
+
+A global error middleware is used to standardise backend error responses.
+
+Instead of exposing raw server errors, the backend returns:
+
+```json
+{
+  "success": false,
+  "message": "Internal server error"
+}
+```
+
+This prevents leaking internal error details to users.
+
+---
+
+## 5. API Logic by Module
+
+### Auth Module
+
+Purpose:
+
+```txt
+- Admin login
+- Password verification
+- JWT token generation
+```
+
+Security involved:
+
+```txt
+- bcrypt password comparison
+- JWT signing
+- environment-based secret
+```
+
+---
+
+### Booking Module
+
+Purpose:
+
+```txt
+- Create booking
+- View bookings
+- Update booking status
+- Delete booking if needed
+```
+
+Business logic:
+
+```txt
+Admin can manage customer appointments from the admin panel.
+```
+
+Security:
+
+```txt
+Protected by JWT auth middleware.
+```
+
+---
+
+### Enquiry Module
+
+Purpose:
+
+```txt
+- Store customer enquiries
+- Allow admin to review customer messages
+- Manage follow-up status
+```
+
+Business logic:
+
+```txt
+Customer enquiries are collected and managed as CRM-style records.
+```
+
+Security:
+
+```txt
+Protected by JWT auth middleware for admin access.
+```
+
+---
+
+### Service Module
+
+Purpose:
+
+```txt
+- Create beauty services
+- Update service details
+- Delete or manage service listings
+```
+
+Business logic:
+
+```txt
+Admin can maintain treatment/service offerings shown to users.
+```
+
+Security:
+
+```txt
+Protected by JWT auth middleware.
+```
+
+---
+
+### Payment Module
+
+Purpose:
+
+```txt
+- Record payment details
+- Track payment method
+- Track payment status
+- Link payment to booking/customer
+```
+
+Business logic:
+
+```txt
+Payment records support admin tracking and reconciliation of customer bookings.
+```
+
+Security:
+
+```txt
+Protected by JWT auth middleware.
+```
+
+---
+
+## 6. Current Security Level
+
+The backend now has a solid foundation for a portfolio or freelance production-style project:
+
+```txt
+✅ Helmet security headers
+✅ Restricted CORS
+✅ Global rate limit
+✅ JWT authentication
+✅ Protected admin API routes
+✅ bcrypt password hashing
+✅ JWT secret stored in .env
+✅ Global error handling
+✅ Prisma ORM for safer database access
+```
+
+---
+
+## 7. Future Improvements
+
+Possible future improvements:
+
+```txt
+- Zod validation for request body checking
+- Separate stricter login rate limit
+- Role-based access control
+- Refresh token using httpOnly cookies
+- Request logging
+- Production monitoring
+- Deployment with HTTPS
+```
+
+---
+
+## 8. Conclusion
+
+The backend is no longer a simple tutorial API. It now follows a proper full-stack backend structure with modular routes, authentication, Prisma database access, middleware-based protection, and core production security practices. This makes it suitable as a strong portfolio project and a foundation for a real freelance business system.
+s

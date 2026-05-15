@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { StatCard } from '@/components/admin/stat-card';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Button } from '@/components/ui/button';
@@ -28,9 +29,26 @@ import {
   CheckCircle,
   XCircle,
   CreditCard,
-  AlertTriangle,
+  
 } from 'lucide-react';
-import { mockPayments, type Payment } from '@/lib/mock-data';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+type Payment = {
+  id: string;
+  bookingId?: string;
+  bookingRef?: string;
+  customerName: string;
+  amount: number;
+  method: string;
+  status: string;
+  date: string;
+};
 
 const statusOptions = ['All', 'Pending', 'Paid', 'Failed', 'Refunded'];
 const methodOptions = ['All', 'Bank Transfer', 'FPX', 'Touch n Go eWallet', 'Credit / Debit Card', 'Cash'];
@@ -39,40 +57,71 @@ export default function PaymentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [methodFilter, setMethodFilter] = useState('All');
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  useEffect(() => {
+  fetchPayments();
+}, []);
 
-  const filteredPayments = mockPayments.filter((payment) => {
+const fetchPayments = async () => {
+  try {
+    const response = await apiFetch('/payments');
+
+    if (Array.isArray(response)) {
+      setPayments(response);
+    } else {
+      setPayments(response.data || []);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+const handleViewPayment = (payment: Payment) => {
+  setSelectedPayment(payment);
+  setIsViewDialogOpen(true);
+};
+
+const handleUpdateStatus = async (id: string, status: string) => {
+  try {
+    await apiFetch(`/payments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        status,
+      }),
+    });
+
+    fetchPayments();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       payment.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.bookingRef.toLowerCase().includes(searchQuery.toLowerCase());
+      payment.bookingRef?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === 'All' || payment.status === statusFilter;
     const matchesMethod = methodFilter === 'All' || payment.method === methodFilter;
     return matchesSearch && matchesStatus && matchesMethod;
   });
 
   // Calculate summary stats
-  const totalPaid = mockPayments
+  const totalPaid =payments
     .filter((p) => p.status === 'Paid')
     .reduce((sum, p) => sum + p.amount, 0);
-  const pendingPayments = mockPayments
+  const pendingPayments =payments
     .filter((p) => p.status === 'Pending')
     .reduce((sum, p) => sum + p.amount, 0);
-  const refundedAmount = mockPayments
+  const refundedAmount =payments
     .filter((p) => p.status === 'Refunded')
     .reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <div className="space-y-6">
       {/* Notice Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-medium text-amber-800">Payment Gateway Not Connected</p>
-          <p className="text-xs text-amber-700 mt-1">
-            This page is a UI placeholder. Payment gateway integration will be available in a future update.
-          </p>
-        </div>
-      </div>
+      
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -171,7 +220,12 @@ export default function PaymentsPage() {
             </thead>
             <tbody className="divide-y divide-border/50">
               {filteredPayments.map((payment) => (
-                <PaymentRow key={payment.id} payment={payment} />
+                <PaymentRow
+  key={payment.id}
+  payment={payment}
+  onView={handleViewPayment}
+  onUpdateStatus={handleUpdateStatus}
+/>
               ))}
             </tbody>
           </table>
@@ -183,12 +237,111 @@ export default function PaymentsPage() {
             <p className="text-sm text-muted-foreground/70">Try adjusting your search or filters</p>
           </div>
         )}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+  <DialogContent className="sm:max-w-[650px] rounded-2xl">
+    <DialogHeader>
+      <DialogTitle className="font-serif text-2xl">
+        Payment Details
+      </DialogTitle>
+
+      <DialogDescription>
+        Review the customer payment information.
+      </DialogDescription>
+    </DialogHeader>
+
+    {selectedPayment && (
+      <div className="space-y-6 py-2">
+        <div className="rounded-2xl border border-border/50 bg-muted/20 p-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Customer
+              </p>
+
+              <h3 className="text-xl font-semibold text-foreground">
+                {selectedPayment.customerName}
+              </h3>
+
+              <p className="text-sm text-muted-foreground">
+                Payment ID: {selectedPayment.id}
+              </p>
+
+              <p className="text-sm text-muted-foreground">
+                Booking Ref: {selectedPayment.bookingRef || '-'}
+              </p>
+            </div>
+
+            <StatusBadge status={selectedPayment.status} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">
+              Amount
+            </p>
+
+            <p className="font-medium">
+              RM {selectedPayment.amount}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">
+              Method
+            </p>
+
+            <p className="font-medium">
+              {selectedPayment.method}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">
+              Payment Date
+            </p>
+
+            <p className="font-medium">
+              {new Date(selectedPayment.date).toLocaleDateString()}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/50 p-4">
+            <p className="text-xs text-muted-foreground mb-1">
+              Status
+            </p>
+
+            <StatusBadge status={selectedPayment.status} />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setIsViewDialogOpen(false)}
+            className="rounded-xl"
+          >
+            Close
+          </Button>
+        </DialogFooter>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
       </div>
     </div>
   );
 }
 
-function PaymentRow({ payment }: { payment: Payment }) {
+function PaymentRow({
+  payment,
+  onView,
+  onUpdateStatus,
+}: {
+  payment: Payment;
+  onView: (payment: Payment) => void;
+  onUpdateStatus: (id: string, status: string) => void;
+}) {
   return (
     <tr className="hover:bg-muted/20 transition-colors">
       <td className="px-5 py-4">
@@ -210,7 +363,7 @@ function PaymentRow({ payment }: { payment: Payment }) {
         <StatusBadge status={payment.status} />
       </td>
       <td className="px-5 py-4">
-        <p className="text-sm text-muted-foreground">{payment.date}</p>
+        <p className="text-sm text-muted-foreground">{new Date(payment.date).toLocaleDateString()}</p>
       </td>
       <td className="px-5 py-4">
         <DropdownMenu>
@@ -220,14 +373,24 @@ function PaymentRow({ payment }: { payment: Payment }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
-            <DropdownMenuItem className="cursor-pointer">
-              <Eye className="h-4 w-4 mr-2" />
-              View Details
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Update Status
-            </DropdownMenuItem>
+           <DropdownMenuItem
+  onClick={() => onView(payment)}
+  className="cursor-pointer"
+>
+  <Eye className="h-4 w-4 mr-2" />
+  View Details
+</DropdownMenuItem>
+
+{['Pending', 'Paid', 'Failed', 'Refunded'].map((status) => (
+  <DropdownMenuItem
+    key={status}
+    onClick={() => onUpdateStatus(payment.id, status)}
+    className="cursor-pointer"
+  >
+    <RefreshCw className="h-4 w-4 mr-2" />
+    Mark as {status}
+  </DropdownMenuItem>
+))}
           </DropdownMenuContent>
         </DropdownMenu>
       </td>

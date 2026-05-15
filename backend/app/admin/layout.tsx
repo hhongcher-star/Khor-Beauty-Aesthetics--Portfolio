@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { AdminHeader } from '@/components/admin/admin-header';
+import { Toaster } from 'sonner';
 
 const pageTitles: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
@@ -34,21 +35,32 @@ export default function AdminLayout({
   }, [pathname, router]);
 
   if (pathname === '/admin/login') {
-    return <>{children}</>;
+    return (
+      <>
+        <Toaster richColors position="top-right" />
+        {children}
+      </>
+    );
   }
 
   const pageTitle = pageTitles[pathname] || 'Admin';
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Toaster richColors position="top-right" />
+
+      <AdminSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <div className="lg:pl-64">
-        <AdminHeader title={pageTitle} onMenuClick={() => setSidebarOpen(true)} />
+        <AdminHeader
+          title={pageTitle}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
 
-        <main className="p-4 lg:p-6">
-          {children}
-        </main>
+        <main className="p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

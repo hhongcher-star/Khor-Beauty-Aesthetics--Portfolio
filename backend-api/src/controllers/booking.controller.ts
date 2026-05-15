@@ -15,6 +15,7 @@ export const getBookings = async (req: Request, res: Response) => {
       data: bookings,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch bookings',
@@ -24,22 +25,32 @@ export const getBookings = async (req: Request, res: Response) => {
 
 export const addBooking = async (req: Request, res: Response) => {
   try {
-    const booking = await createBooking(req.body);
+    const { customerName, email, phone, service, appointment } = req.body;
+
+    const booking = await createBooking({
+      customerName,
+      email,
+      phone,
+      service,
+      appointment,
+    });
 
     res.status(201).json({
       success: true,
       data: booking,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: 'Failed to create booking',
     });
   }
 };
+
 export const editBooking = async (req: Request, res: Response) => {
   try {
-     const id = req.params.id as string;
+    const id = req.params.id as string;
 
     const updatedBooking = await updateBooking(id, req.body);
 
@@ -48,6 +59,7 @@ export const editBooking = async (req: Request, res: Response) => {
       data: updatedBooking,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: 'Failed to update booking',
@@ -66,6 +78,7 @@ export const removeBooking = async (req: Request, res: Response) => {
       message: 'Booking deleted successfully',
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete booking',

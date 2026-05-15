@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { StatCard } from '@/components/admin/stat-card';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Button } from '@/components/ui/button';
@@ -14,11 +15,65 @@ import {
   ArrowRight,
   Eye,
 } from 'lucide-react';
-import { mockBookings, mockEnquiries, dashboardStats } from '@/lib/mock-data';
+import { apiFetch } from '@/lib/api';
+type Booking = {
+  id: string;
+  customerName: string;
+  phone: string;
+  service: string;
+  status: string;
+  appointment: string;
+};
+
+type Enquiry = {
+  id: string;
+  customerName: string;
+  source: string;
+  status: string;
+  message: string;
+  createdAt: string;
+};
+
+type Payment = {
+  id: string;
+  amount: number;
+  status: string;
+};
 
 export default function DashboardPage() {
-  const recentBookings = mockBookings.slice(0, 5);
-  const recentEnquiries = mockEnquiries.slice(0, 3);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+const [payments, setPayments] = useState<Payment[]>([]);
+
+useEffect(() => {
+  fetchDashboardData();
+}, []);
+
+const fetchDashboardData = async () => {
+  try {
+    const [bookingRes, enquiryRes, paymentRes] = await Promise.all([
+      apiFetch('/bookings'),
+      apiFetch('/enquiries'),
+      apiFetch('/payments'),
+    ]);
+
+    setBookings(bookingRes.data || []);
+    setEnquiries(enquiryRes.data || []);
+    setPayments(paymentRes.data || []);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const recentBookings = bookings.slice(0, 5);
+const recentEnquiries = enquiries.slice(0, 3);
+
+const totalBookings = bookings.length;
+const newEnquiries = enquiries.filter((e) => e.status === 'new').length;
+const pendingPayments = payments.filter((p) => p.status === 'Pending').length;
+const revenue = payments
+  .filter((p) => p.status === 'Paid')
+  .reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <div className="space-y-6">
@@ -34,24 +89,24 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Bookings"
-          value={dashboardStats.totalBookings}
+          value={totalBookings}
           icon={Calendar}
           trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="New Enquiries"
-          value={dashboardStats.newEnquiries}
+          value={newEnquiries}
           icon={MessageSquare}
           description="Awaiting response"
         />
         <StatCard
           title="Active Services"
-          value={dashboardStats.activeServices}
+          value="5"
           icon={Sparkles}
         />
         <StatCard
           title="Pending Payments"
-          value={dashboardStats.pendingPayments}
+          value={pendingPayments}
           icon={CreditCard}
         />
       </div>
@@ -130,8 +185,16 @@ export default function DashboardPage() {
                       <p className="text-sm text-foreground">{booking.service}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-sm text-foreground">{booking.date}</p>
-                      <p className="text-xs text-muted-foreground">{booking.time}</p>
+                      <p className="text-sm text-foreground">
+  {new Date(booking.appointment).toLocaleDateString()}
+</p>
+
+<p className="text-xs text-muted-foreground">
+  {new Date(booking.appointment).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}
+</p>
                     </td>
                     <td className="px-5 py-4">
                       <StatusBadge status={booking.status} />
@@ -169,7 +232,7 @@ export default function DashboardPage() {
                   <StatusBadge status={enquiry.status} />
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">{enquiry.message}</p>
-                <p className="text-xs text-muted-foreground mt-2">{enquiry.dateReceived}</p>
+                <p className="text-xs text-muted-foreground mt-2">{new Date(enquiry.createdAt).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
@@ -189,7 +252,7 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="text-center p-4 rounded-xl bg-muted/30">
-            <p className="text-2xl font-semibold text-foreground">{dashboardStats.thisMonthCustomers}</p>
+            <p className="text-2xl font-semibold text-foreground">{bookings.length}</p>
             <p className="text-xs text-muted-foreground mt-1">Total Customers</p>
           </div>
           <div className="text-center p-4 rounded-xl bg-muted/30">
@@ -201,7 +264,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground mt-1">Upcoming</p>
           </div>
           <div className="text-center p-4 rounded-xl bg-muted/30">
-            <p className="text-2xl font-semibold text-foreground">RM 8,540</p>
+            <p className="text-2xl font-semibold text-foreground">RM {revenue.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-1">Revenue</p>
           </div>
         </div>
