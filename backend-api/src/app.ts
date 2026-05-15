@@ -16,15 +16,11 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "https://khor-beauty-aesthetics-portfolio-4yz5-9itdiv90u.vercel.app",
-    ],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    origin: true,
     credentials: true,
   })
 );
+
 
 app.use(
   rateLimit({
