@@ -1,343 +1,437 @@
-# Frontend Technical Documentation
+# KHOR Beauty Clinic Frontend Documentation
 
-## Khor Beauty Aesthetics Website
+## 1. Project Overview
 
----
+KHOR Beauty Clinic frontend is a Next.js web application built for a beauty clinic website and admin dashboard.
 
-# 1. Frontend Overview
+The frontend supports two main areas:
 
-The frontend is built using a modern React-based architecture powered by Next.js App Router.
+1. Public customer website
+2. Admin management dashboard
 
-The purpose of the frontend is to provide:
-
-* Responsive website UI
-* Luxury aesthetic branding experience
-* Booking interaction
-* Service showcase
-* Contact & inquiry pages
-* Reusable component-based architecture
-
-The frontend follows a scalable production-ready structure suitable for future SaaS-level expansion.
+The public website allows customers to view services, make bookings, and submit contact enquiries. The admin dashboard allows staff to manage bookings, enquiries, payment statuses, and service-related information.
 
 ---
 
-# 2. Frontend Technology Stack
+## 2. Frontend Technology Stack
 
-| Technology       | Purpose                      |
-| ---------------- | ---------------------------- |
-| Next.js          | React framework              |
-| React            | UI rendering                 |
-| TypeScript (TSX) | Typed frontend development   |
-| Tailwind CSS     | Utility-first styling        |
-| shadcn/ui        | Reusable UI component system |
-| Turbopack        | Development bundler          |
-| PostCSS          | CSS processing               |
-| Google Fonts     | Typography system            |
+| Area               | Technology                          |
+| ------------------ | ----------------------------------- |
+| Framework          | Next.js                             |
+| UI Library         | React                               |
+| Language           | TypeScript                          |
+| Styling            | Tailwind CSS                        |
+| UI Components      | shadcn/ui                           |
+| Icons              | Lucide React                        |
+| Toast Notification | Sonner                              |
+| API Communication  | Fetch API through custom API helper |
 
 ---
 
-# 3. Frontend Folder Structure
+## 3. Frontend Architecture
 
-```txt
-frontend/
- ┣ app/
- ┣ components/
- ┣ hooks/
- ┣ lib/
- ┣ public/
- ┣ styles/
- ┣ package.json
- ┣ tsconfig.json
- ┣ next.config.ts
- ┣ postcss.config.mjs
- ┗ components.json
+The frontend is structured using a component-based architecture.
+
+Main responsibilities of the frontend include:
+
+* Rendering customer-facing pages
+* Handling customer form submissions
+* Connecting to backend APIs
+* Managing admin dashboard data
+* Managing form state and UI state
+* Displaying success and error feedback
+* Supporting admin authentication flow
+
+---
+
+## 4. Main Frontend Modules
+
+## 4.1 Public Website
+
+The public website includes the following pages:
+
+* Home
+* Services
+* About
+* Contact
+* Booking
+
+These pages are designed for customers to learn about the clinic, browse services, and interact with the business through booking and enquiry forms.
+
+---
+
+## 4.2 Booking System
+
+The booking system allows customers to submit an appointment booking from the frontend.
+
+### Main Features
+
+* Service selection
+* Appointment date and time selection
+* Customer information collection
+* Booking form submission
+* Backend API integration
+* Error handling
+* Success feedback
+
+### Booking Data Submitted
+
+```ts
+{
+  customerName: string,
+  email: string,
+  phone: string,
+  service: string,
+  appointment: string
+}
 ```
 
----
-
-# 4. App Router Structure
-
-The project uses Next.js App Router architecture.
+### API Endpoint Used
 
 ```txt
-app/
- ┣ about/
- ┃ ┗ page.tsx
- ┣ booking/
- ┃ ┗ page.tsx
- ┣ contact/
- ┃ ┗ page.tsx
- ┣ services/
- ┃ ┗ page.tsx
- ┣ globals.css
- ┣ layout.tsx
- ┗ page.tsx
+POST /api/bookings
 ```
 
----
-
-# 5. Page Responsibilities
-
-| File              | Purpose             |
-| ----------------- | ------------------- |
-| page.tsx          | Homepage            |
-| about/page.tsx    | About page          |
-| services/page.tsx | Services listing    |
-| booking/page.tsx  | Booking page        |
-| contact/page.tsx  | Contact page        |
-| layout.tsx        | Global page wrapper |
-| globals.css       | Global styling      |
+This is a public API request because customers should be able to create bookings without logging in.
 
 ---
 
-# 6. Component Architecture
+## 4.3 Contact / Enquiry System
 
-The frontend uses modular reusable component architecture.
+The contact page includes a customer enquiry form.
 
-```txt
-components/
- ┣ home/
- ┣ about/
- ┣ services/
- ┣ contact/
- ┣ booking/
- ┣ layout/
- ┗ ui/
+### Main Features
+
+* Customer name input
+* Email input
+* Phone input
+* Subject input
+* Message textarea
+* Loading state during submission
+* Success message after submission
+* Toast notification feedback
+* API integration with backend enquiry endpoint
+
+### Enquiry Data Submitted
+
+```ts
+{
+  customerName: string,
+  email: string,
+  phone: string,
+  message: string
+}
 ```
 
----
-
-# 7. Core Layout Components
-
-## Header
-
-```txt
-components/layout/header.tsx
-```
-
-Responsibilities:
-
-* Navigation bar
-* Logo display
-* Navigation links
-* CTA buttons
-* Mobile responsive menu
-
----
-
-## Footer
-
-```txt
-components/layout/footer.tsx
-```
-
-Responsibilities:
-
-* Contact information
-* Social media links
-* Copyright
-* Footer navigation
-
----
-
-# 8. Homepage Components
-
-```txt
-components/home/
-```
-
-| Component                | Purpose                    |
-| ------------------------ | -------------------------- |
-| hero.tsx                 | Main landing hero section  |
-| featured-treatments.tsx  | Highlighted services       |
-| before-after-gallery.tsx | Visual gallery             |
-| testimonials.tsx         | Customer reviews           |
-| faq.tsx                  | Frequently asked questions |
-| introduction.tsx         | Brand introduction         |
-| cta-section.tsx          | Call-to-action section     |
-
----
-
-# 9. UI Design System
-
-The project uses shadcn/ui as the UI component system.
-
-Located in:
-
-```txt
-components/ui/
-```
-
-Examples:
-
-| Component     | Purpose       |
-| ------------- | ------------- |
-| button.tsx    | Buttons       |
-| input.tsx     | Form inputs   |
-| card.tsx      | Service cards |
-| dialog.tsx    | Modals        |
-| accordion.tsx | FAQ sections  |
-| tabs.tsx      | Tab switching |
-| toast.tsx     | Notifications |
-
----
-
-# 10. Styling System
-
-Global styling is handled in:
-
-```txt
-app/globals.css
-```
-
-The project uses:
-
-* Tailwind CSS
-* CSS variables
-* Custom animations
-* Glassmorphism utilities
-* Responsive utility classes
-
----
-
-# 11. Tailwind CSS Usage
+The subject is combined into the message body before submission.
 
 Example:
 
-```tsx
-className="
-flex
-items-center
-justify-between
-px-8
-py-4
-bg-white/70
-backdrop-blur-md
-"
+```ts
+message: `Subject: ${subject}\n\n${message}`
 ```
 
-Purpose:
-
-| Class            | Meaning                     |
-| ---------------- | --------------------------- |
-| flex             | Flexbox layout              |
-| items-center     | Vertical alignment          |
-| justify-between  | Horizontal spacing          |
-| px-8             | Horizontal padding          |
-| py-4             | Vertical padding            |
-| bg-white/70      | Semi-transparent background |
-| backdrop-blur-md | Glass blur effect           |
-
----
-
-# 12. Frontend Assets
-
-Located in:
+### API Endpoint Used
 
 ```txt
-public/
+POST /api/enquiries
 ```
 
-Contains:
-
-* Logo
-* Hero images
-* Treatment photos
-* Icons
-* Before/after images
+This is a public API request because customers should be able to submit enquiries without logging in.
 
 ---
 
-# 13. Development Commands
+## 4.4 Admin Dashboard
 
-## Start Development Server
+The admin dashboard is used by internal staff to manage customer-related records.
 
-```bash
-cd frontend
-npm run dev
+### Main Features
+
+* View bookings
+* Search bookings
+* Filter bookings by status
+* Filter bookings by payment status
+* View booking details
+* Add booking manually
+* Edit booking
+* Delete booking
+* Update booking status
+* Update payment status
+
+---
+
+## 5. Frontend API Layer
+
+The frontend uses a centralized API helper located in the frontend `lib` folder.
+
+The API helper is responsible for:
+
+* Defining the backend base URL
+* Sending API requests
+* Adding request headers
+* Attaching admin token when available
+* Parsing JSON responses
+* Throwing errors when requests fail
+
+### Example API Usage
+
+```ts
+await apiRequest('/bookings', {
+  method: 'GET',
+})
+```
+
+### Token Handling
+
+For admin requests, the frontend retrieves the token from localStorage and sends it in the Authorization header.
+
+```ts
+Authorization: `Bearer ${token}`
+```
+
+This allows protected backend routes to verify whether the admin is authenticated.
+
+---
+
+## 6. Authentication Flow
+
+The frontend supports admin login using JWT authentication.
+
+### Login Flow
+
+1. Admin enters login credentials.
+2. Frontend sends credentials to backend login API.
+3. Backend returns a JWT token.
+4. Frontend stores the token in localStorage.
+5. Future admin API requests include the token in the Authorization header.
+6. Backend verifies the token before allowing protected actions.
+
+### Protected Frontend Behaviour
+
+Admin-only features depend on token-based authentication. The frontend API helper automatically includes the token when it exists.
+
+---
+
+## 7. State Management
+
+The project uses React local state management through `useState`.
+
+Common frontend states include:
+
+* Form data state
+* Loading state
+* Submission state
+* Selected booking state
+* Dialog open/close state
+* Search query state
+* Filter state
+
+Example:
+
+```ts
+const [bookings, setBookings] = useState([])
+const [searchQuery, setSearchQuery] = useState('')
+const [isSubmitting, setIsSubmitting] = useState(false)
 ```
 
 ---
 
-## Production Build
+## 8. UI Components
 
-```bash
-npm run build
+The frontend uses reusable UI components to maintain consistency.
+
+Common components include:
+
+* Button
+* Input
+* Label
+* Dialog
+* Select
+* Dropdown Menu
+* Status Badge
+* Header
+* Footer
+
+This improves maintainability because repeated UI patterns are centralized and reusable.
+
+---
+
+## 9. Booking Management UI
+
+The booking management page displays bookings in a table format.
+
+### Table Columns
+
+* Customer
+* Service
+* Date & Time
+* Status
+* Payment
+* Actions
+
+### Available Actions
+
+* View details
+* Edit booking
+* Change booking status
+* Delete booking
+
+### Filters
+
+The page supports filtering by:
+
+* Booking status
+* Payment status
+* Search keyword
+
+Search checks customer name, service, and email.
+
+---
+
+## 10. Contact Page UI
+
+The contact page consists of two sections:
+
+1. Contact form
+2. Contact information
+
+### Contact Form
+
+The form collects:
+
+* Name
+* Email
+* Phone
+* Subject
+* Message
+
+After successful submission, the user sees a confirmation message.
+
+### Contact Information
+
+The right section displays:
+
+* Address
+* Phone numbers
+* Email addresses
+* Opening hours
+* WhatsApp link
+* Social media links
+* Google Map embed
+
+---
+
+## 11. Error Handling and User Feedback
+
+The frontend uses toast notifications to provide immediate feedback.
+
+Examples:
+
+```ts
+toast.success('Message sent successfully')
+toast.error('Failed to send message')
 ```
 
+This improves user experience by clearly informing users whether an action succeeded or failed.
+
 ---
 
-## Start Production Server
+## 12. Responsive Design
 
-```bash
-npm start
+The frontend uses Tailwind CSS responsive classes to support different screen sizes.
+
+Examples:
+
+```txt
+grid-cols-1 lg:grid-cols-2
+w-full md:w-auto
+py-24 md:py-32
 ```
 
----
+This ensures the website works on:
 
-# 14. Git Workflow
-
-## Initial Setup
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-```
+* Desktop
+* Laptop
+* Tablet
+* Mobile
 
 ---
 
-## Push to GitHub
+## 13. Frontend Security Considerations
 
-```bash
-git branch -M main
-git remote add origin <repo-url>
-git push -u origin main
-```
+Although most security is handled by the backend, the frontend contributes through:
 
----
+* Sending JWT tokens only for admin API requests
+* Avoiding exposure of sensitive backend logic
+* Using controlled form inputs
+* Avoiding hardcoded sensitive credentials
+* Handling API errors safely
 
-# 15. Frontend Architecture Philosophy
-
-The frontend architecture is designed with:
-
-* Component reusability
-* Clean separation of concerns
-* Scalable design system
-* Modern React patterns
-* Responsive-first design
-* Future backend integration readiness
+Admin tokens are stored in localStorage for development convenience. For production, further security improvements may be considered.
 
 ---
 
-# 16. Current Frontend Status
+## 14. Completed Frontend Features
 
-Current frontend implementation includes:
+### Public Website
 
-✅ Multi-page structure
-✅ Responsive layout
-✅ Luxury aesthetic design
-✅ Hero landing section
-✅ Services showcase
-✅ Booking UI structure
-✅ Reusable UI system
-✅ Tailwind integration
-✅ Next.js App Router structure
-✅ TypeScript architecture
+* Home page
+* Services page
+* About page
+* Contact page
+* Booking page
+
+### Customer Functions
+
+* Submit booking
+* Submit enquiry
+* Contact through WhatsApp link
+* View service information
+
+### Admin Functions
+
+* Login
+* View bookings
+* Create bookings
+* Edit bookings
+* Delete bookings
+* Update booking status
+* Update payment status
+* View booking details
+
+### Technical Features
+
+* API helper integration
+* Toast notifications
+* Reusable UI components
+* Responsive layout
+* TypeScript typing
+* Form state management
+* Dialog state management
 
 ---
 
-# 17. Future Frontend Expansion
+## 15. Future Frontend Improvements
 
-Planned future frontend enhancements:
+Possible improvements for future development:
 
-* Authentication system
-* CRM dashboard
-* Payment integration
-* WhatsApp automation
-* Appointment management
-* Analytics dashboard
-* Admin panel
-* Customer portal
-* API integration
-* Dark mode support
+* Add stronger frontend form validation
+* Add loading skeletons
+* Add pagination for booking and enquiry tables
+* Add admin profile page
+* Add dashboard charts
+* Add calendar view for appointments
+* Add image upload for services
+* Add dark mode
+* Add role-based admin access
+* Add production environment variable configuration
+
+---
+
+## 16. Conclusion
+
+The KHOR Beauty Clinic frontend is a complete customer-facing and admin-facing interface built with modern frontend technologies.
+
+It includes public business pages, booking submission, enquiry submission, admin management screens, reusable UI components, API integration, authentication support, and responsive design.
+
+The frontend is suitable as a full stack portfolio project and can be further extended into a production-ready clinic management system.

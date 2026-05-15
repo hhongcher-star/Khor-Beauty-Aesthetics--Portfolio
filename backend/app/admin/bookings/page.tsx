@@ -42,7 +42,7 @@ import {
   RefreshCw,
   Calendar,
 } from 'lucide-react';
-import { apiFetch } from '@/lib/api';
+import { apiFetch } from '@/lib/api'
 type Booking = {
   id: string;
   customerName: string;
@@ -71,6 +71,7 @@ export default function BookingsPage() {
     fetchBookings();
   }, []);
 
+ 
   const fetchBookings = async () => {
     try {
       const response = await apiFetch('/bookings');

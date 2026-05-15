@@ -1,0 +1,261 @@
+# KHOR Beauty Clinic Full Stack Website
+
+KHOR Beauty Clinic is a full stack web application built for a beauty clinic business. The project includes a public customer-facing website and an admin dashboard for managing bookings, enquiries, services, and payment statuses.
+
+---
+
+## Features
+
+### Public Website
+
+* Home page
+* Services page
+* About page
+* Contact page
+* Booking page
+* Customer booking form
+* Customer enquiry form
+* WhatsApp contact link
+* Responsive layout
+
+### Admin Dashboard
+
+* Admin login
+* View bookings
+* Add bookings
+* Edit bookings
+* Delete bookings
+* Update booking status
+* Update payment status
+* View booking details
+* Manage customer enquiries
+
+---
+
+## Tech Stack
+
+### Frontend
+
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* Lucide React
+* Sonner Toast Notifications
+
+### Backend
+
+* Node.js
+* Express.js
+* TypeScript
+* Prisma ORM
+* PostgreSQL
+* JWT Authentication
+* Helmet
+* CORS
+* Express Rate Limit
+
+---
+
+## Project Structure
+
+```txt
+project-root/
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   ├── public/
+│   └── package.json
+│
+└── backend/
+    ├── controllers/
+    ├── middleware/
+    ├── routes/
+    ├── prisma/
+    ├── services/
+    ├── app.ts
+    └── package.json
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Default frontend URL:
+
+```txt
+http://localhost:3000
+```
+
+If port 3000 is occupied, Next.js may run on:
+
+```txt
+http://localhost:3001
+```
+
+---
+
+## Backend Setup
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Default backend URL:
+
+```txt
+http://localhost:5000
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file inside the backend folder.
+
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
+JWT_SECRET="your_jwt_secret"
+PORT=5000
+```
+
+---
+
+## Prisma Commands
+
+Generate Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Run database migration:
+
+```bash
+npx prisma migrate dev
+```
+
+Open Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+---
+
+## Main API Endpoints
+
+### Auth
+
+```txt
+POST /api/auth/login
+```
+
+### Bookings
+
+```txt
+POST   /api/bookings
+GET    /api/bookings
+PUT    /api/bookings/:id
+DELETE /api/bookings/:id
+```
+
+### Enquiries
+
+```txt
+POST /api/enquiries
+GET  /api/enquiries
+```
+
+### Services
+
+```txt
+GET /api/services
+```
+
+### Payments
+
+```txt
+GET /api/payments
+```
+
+---
+
+## Authentication
+
+The admin dashboard uses JWT authentication.
+
+After login, the token is stored in localStorage and attached to protected API requests using the Authorization header.
+
+```txt
+Authorization: Bearer <token>
+```
+
+---
+
+## Security Features
+
+* JWT authentication for admin routes
+* Helmet for secure HTTP headers
+* CORS configuration for frontend access
+* Rate limiting to reduce spam requests
+* Protected backend routes for admin actions
+
+---
+
+## Current Status
+
+Completed:
+
+* Public website frontend
+* Booking form integration
+* Contact enquiry integration
+* Admin dashboard UI
+* Booking CRUD
+* Authentication flow
+* Backend API integration
+* Prisma database setup
+* Security middleware setup
+
+---
+
+## Future Improvements
+
+* Deployment to Vercel and Railway / Render
+* Add image upload for services
+* Add dashboard charts
+* Add calendar appointment view
+* Add pagination for admin tables
+* Add stronger form validation
+* Add role-based admin permissions
+* Add email notification system
+* Add payment gateway integration
+
+## Security Review:
+- Dependency vulnerability scanning performed using Snyk
+- Security middleware implemented:
+  - Helmet
+  - CORS
+  - Rate limiting
+  - JWT authentication
+---
+
+## Testing:
+- Manual API testing performed using Postman / Thunder Client.
+- Authentication routes tested.
+- Public and protected API routes tested.
+- Invalid input handling tested.
+- Basic security testing performed for unauthorized access, fake tokens, XSS-style input, SQL injection-style input, and rate limiting.
+## Author
+
+Developed by  Lau as a full stack portfolio project.

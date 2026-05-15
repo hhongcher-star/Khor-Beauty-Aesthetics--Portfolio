@@ -1,55 +1,88 @@
 ﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Sparkles, Clock, Zap, Heart } from 'lucide-react'
+import { Sparkles, Clock, Zap, Heart, Droplets, Sun, Smile } from 'lucide-react'
 
-const categories = [
+type Service = {
+  id: string
+  name: string
+  description: string
+  price: number
+  category?: string | null
+  active: boolean
+}
+
+type ServiceCategoriesProps = {
+  services?: Service[]
+}
+
+const CATEGORY_INFO = [
   {
+    title: 'Skin Booster',
     icon: Sparkles,
-    title: 'Facial Treatments',
+    description: 'Improve skin radiance, hydration, and overall skin quality.',
+  },
+  {
+    title: 'Facial Treatment',
+    icon: Smile,
     description: 'Deep cleansing, hydration, and rejuvenation facials tailored to your skin type.',
-    count: '12 Services',
   },
   {
-    icon: Clock,
     title: 'Anti-Aging',
-    description: 'Turn back time with advanced treatments targeting fine lines and wrinkles.',
-    count: '8 Services',
+    icon: Clock,
+    description: 'Advanced treatments targeting fine lines, firmness, and youthful skin.',
   },
   {
-    icon: Zap,
-    title: 'Skin Treatments',
-    description: 'Address specific concerns like acne, pigmentation, and texture issues.',
-    count: '10 Services',
+    title: 'Brightening',
+    icon: Sun,
+    description: 'Treat dullness, uneven skin tone, pigmentation, and glow concerns.',
   },
   {
+    title: 'Hydration',
+    icon: Droplets,
+    description: 'Restore moisture balance and improve dry or dehydrated skin.',
+  },
+  {
+    title: 'Body Treatment',
     icon: Heart,
-    title: 'Body Contouring',
-    description: 'Sculpt and tone your body with non-invasive body treatments.',
-    count: '6 Services',
+    description: 'Sculpt, firm, and improve body skin appearance with non-invasive treatments.',
+  },
+  {
+    title: 'Other',
+    icon: Zap,
+    description: 'Other personalised aesthetic and beauty treatments.',
   },
 ]
 
-export function ServiceCategories() {
+export function ServiceCategories({ services = [] }: ServiceCategoriesProps) {
   const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
+        if (entry.isIntersecting) setIsVisible(true)
       },
       { threshold: 0.1 }
     )
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
+    if (sectionRef.current) observer.observe(sectionRef.current)
 
     return () => observer.disconnect()
   }, [])
+
+  const activeServices = services.filter((service) => service.active)
+
+  const categories = CATEGORY_INFO.map((category) => {
+    const count = activeServices.filter(
+      (service) => (service.category || 'Other') === category.title
+    ).length
+
+    return {
+      ...category,
+      count,
+    }
+  }).filter((category) => category.count > 0)
 
   return (
     <section ref={sectionRef} className="py-20 bg-background">
@@ -58,16 +91,21 @@ export function ServiceCategories() {
           {categories.map((category, index) => (
             <div
               key={category.title}
-              className={`group p-8 border border-border rounded-lg hover:bg-secondary/50 transition-all duration-500 cursor-pointer ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+              className={`group p-8 border border-border rounded-lg hover:bg-secondary/50 transition-all duration-500 cursor-pointer ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+              }`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
               <category.icon className="w-10 h-10 text-primary mb-6 transition-transform group-hover:scale-110" />
+
               <h3 className="text-xl font-light mb-3">{category.title}</h3>
+
               <p className="font-sans text-sm text-muted-foreground leading-relaxed mb-4">
                 {category.description}
               </p>
+
               <span className="font-sans text-xs tracking-wider uppercase text-primary">
-                {category.count}
+                {category.count} {category.count === 1 ? 'Service' : 'Services'}
               </span>
             </div>
           ))}
@@ -76,4 +114,3 @@ export function ServiceCategories() {
     </section>
   )
 }
-

@@ -8,7 +8,7 @@ import enquiryRoutes from "./routes/enquiry.routes";
 import serviceRoutes from "./routes/service.routes";
 import authRoutes from "./routes/auth.routes";
 import paymentRoutes from "./routes/payment.routes";
-import { errorHandler } from "./middlewares/error.middleware";
+import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
 
@@ -16,7 +16,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })

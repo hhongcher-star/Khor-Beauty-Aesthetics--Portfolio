@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { MapPin, Phone, Mail, Clock, MessageCircle, Instagram, Facebook } from 'lucide-react'
+import { apiRequest } from '@/lib/api'
+import { toast } from 'sonner'
 
 const contactInfo = [
   {
@@ -32,13 +34,14 @@ const contactInfo = [
 export function ContactContent() {
   const [isVisible, setIsVisible] = useState(false)
   const [formData, setFormData] = useState({
-    name: '',
+    customerName: '',
     email: '',
     phone: '',
     subject: '',
     message: '',
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -58,10 +61,41 @@ export function ContactContent() {
     return () => observer.disconnect()
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically send the form data to your backend
-    setIsSubmitted(true)
+
+    try {
+      setIsSubmitting(true)
+
+      await apiRequest('/enquiries', {
+        method: 'POST',
+        body: JSON.stringify({
+          customerName: formData.customerName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          message: formData.subject.trim()
+            ? `Subject: ${formData.subject.trim()}\n\n${formData.message.trim()}`
+            : formData.message.trim(),
+        }),
+      })
+
+      toast.success('Message sent successfully')
+
+      setIsSubmitted(true)
+
+      setFormData({
+        customerName: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: '',
+      })
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to send message')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -83,16 +117,23 @@ export function ContactContent() {
                 <p className="font-sans text-muted-foreground">
                   Thank you for reaching out. We will get back to you within 24 hours.
                 </p>
+                <Button
+                  type="button"
+                  onClick={() => setIsSubmitted(false)}
+                  className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90 font-sans text-sm tracking-widest uppercase px-8 py-5 rounded-none"
+                >
+                  Send Another Message
+                </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="name" className="font-sans text-sm">Name</Label>
+                    <Label htmlFor="customerName" className="font-sans text-sm">Name</Label>
                     <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      id="customerName"
+                      value={formData.customerName}
+                      onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                       required
                       className="mt-2 rounded-none border-border"
                     />
@@ -109,6 +150,7 @@ export function ContactContent() {
                     />
                   </div>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="phone" className="font-sans text-sm">Phone</Label>
@@ -131,6 +173,7 @@ export function ContactContent() {
                     />
                   </div>
                 </div>
+
                 <div>
                   <Label htmlFor="message" className="font-sans text-sm">Message</Label>
                   <textarea
@@ -142,11 +185,13 @@ export function ContactContent() {
                     className="mt-2 w-full px-3 py-2 border border-border bg-background rounded-none resize-none focus:outline-none focus:ring-2 focus:ring-ring font-sans"
                   />
                 </div>
+
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 font-sans text-sm tracking-widest uppercase px-10 py-6 rounded-none w-full md:w-auto"
                 >
-                  Send Message
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
             )}
@@ -176,7 +221,6 @@ export function ContactContent() {
               ))}
             </div>
 
-            {/* WhatsApp Button */}
             <div className="mt-10">
               <a
                 href="https://wa.me/821012345678"
@@ -189,7 +233,6 @@ export function ContactContent() {
               </a>
             </div>
 
-            {/* Social Links */}
             <div className="mt-10 pt-10 border-t border-border">
               <h3 className="font-light text-lg mb-4">Follow Us</h3>
               <div className="flex gap-4">
@@ -210,7 +253,6 @@ export function ContactContent() {
               </div>
             </div>
 
-            {/* Map Placeholder */}
             <div className="mt-10 aspect-video bg-muted rounded-lg overflow-hidden">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3164.269152776842!2d126.97796611531066!3d37.56682997979876!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357ca2eb421c44ad%3A0xe955a50c118085f1!2sSeoul%2C%20South%20Korea!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"
@@ -229,4 +271,3 @@ export function ContactContent() {
     </section>
   )
 }
-

@@ -1,0 +1,47 @@
+services:
+  customer-frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend-api
+
+  admin-frontend:
+    build:
+      context: ./backend
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend-api
+
+  backend-api:
+    build:
+      context: ./backend-api
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/khor_beauty
+      - JWT_SECRET=your_jwt_secret
+      - PORT=5000
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=khor_beauty
+    ports:
+      - "5432:5432"
+    volumes:
+      - khor_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  khor_postgres_data:
