@@ -1,5 +1,6 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+  process.env.NEXT_PUBLIC_API_URL ||
+  'https://khor-beauty-aesthetics-portfolio-production.up.railway.app/api'
 
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   if (!endpoint.startsWith('/')) {
