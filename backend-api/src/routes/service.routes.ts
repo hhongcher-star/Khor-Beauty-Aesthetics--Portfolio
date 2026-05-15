@@ -15,13 +15,21 @@ const categoryOptions = [
 
 // GET all services
 router.get("/", async (req, res) => {
-  const services = await prisma.service.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  try {
+    const services = await prisma.service.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-  res.json(services);
+    res.json(services);
+  } catch (error) {
+    console.error("GET /services error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 });
 
 // GET single service
