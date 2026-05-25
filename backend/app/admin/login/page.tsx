@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { API_BASE_URL } from '@/lib/api';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function AdminLoginPage() {
@@ -23,8 +24,7 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-  {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,14 +35,17 @@ export default function AdminLoginPage() {
         }),
       });
 
-      const data = await response.json();
-      console.log(data);
+      const contentType = response.headers.get('content-type');
+      const data = contentType?.includes('application/json')
+        ? await response.json()
+        : null;
 
       if (!response.ok) {
-        setError(data.message || 'Login failed');
+        setError(data?.message || 'Login failed. Please check the API URL and credentials.');
         return;
       }
 
+      // TODO: Migrate admin auth to httpOnly secure cookies to reduce JWT exposure risk.
       localStorage.setItem('adminToken', data.token);
       localStorage.setItem('adminUser', JSON.stringify(data.admin));
 

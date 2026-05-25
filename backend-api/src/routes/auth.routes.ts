@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../utils/prisma";
+import { env } from "../config/env";
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.post("/login", async (req, res) => {
       email: admin.email,
       role: admin.role,
     },
-    process.env.JWT_SECRET as string,
+    env.jwtSecret,
     { expiresIn: "1d" }
   );
 

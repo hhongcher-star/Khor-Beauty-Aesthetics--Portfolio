@@ -1,88 +1,75 @@
-import express from "express";
-import prisma from "../utils/prisma";
-import { authMiddleware } from "../middleware/auth.middleware";
+import express from 'express';
+import prisma from '../utils/prisma';
+import { authMiddleware } from '../middleware/auth.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { idParamSchema } from '../schemas/common.schema';
+import { createEnquirySchema, updateEnquiryStatusSchema } from '../schemas/enquiry.schema';
 
 const router = express.Router();
 
-const enquiryStatusOptions = ["New", "Contacted", "Closed"];
-const sourceOptions = ["Website Form", "WhatsApp", "Instagram", "Manual"];
+const normalizeEnquiryStatus = (status: string) => {
+  const normalized = status.trim().toLowerCase();
+  if (normalized === 'contacted') return 'Contacted';
+  if (normalized === 'closed') return 'Closed';
+  return 'New';
+};
 
-// GET all enquiries - admin only
-router.get("/", authMiddleware, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const enquiries = await prisma.enquiry.findMany({
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
 
     res.json(enquiries);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// POST enquiry - public customer form
-router.post("/", async (req, res) => {
+router.post('/', validate(createEnquirySchema), async (req, res) => {
   try {
-    const { customerName, email, phone, message, source } = req.body;
-
-    if (!customerName || !email || !phone || !message) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (customerName.trim().length > 100) {
-      return res.status(400).json({ message: "Customer name is too long" });
-    }
-
-    if (message.trim().length > 1000) {
-      return res.status(400).json({ message: "Message is too long" });
-    }
-
     const enquiry = await prisma.enquiry.create({
       data: {
-        customerName: customerName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        message: message.trim(),
-        source: source || "Website Form",
-        status: "New",
+        ...req.body,
+        source: req.body.source || 'Website Form',
+        status: 'New',
       },
     });
 
-    res.json({
-      message: "Enquiry submitted successfully",
+    res.status(201).json({
+      message: 'Enquiry submitted successfully',
       data: enquiry,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
-// PUT update enquiry status
-router.put("/:id/status", authMiddleware, async (req, res) => {
-  try {
-    const id = req.params.id as string;
-    const { status } = req.body;
 
-    if (!["new", "contacted", "closed"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+router.put(
+  '/:id/status',
+  authMiddleware,
+  validate(idParamSchema, 'params'),
+  validate(updateEnquiryStatusSchema),
+  async (req, res) => {
+    try {
+      const enquiry = await prisma.enquiry.update({
+        where: { id: String(req.params.id) },
+        data: { status: normalizeEnquiryStatus(req.body.status) },
+      });
+
+      res.json({
+        message: 'Enquiry status updated successfully',
+        data: enquiry,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
     }
-
-    const enquiry = await prisma.enquiry.update({
-      where: { id },
-      data: { status },
-    });
-
-    res.json({
-      message: "Enquiry status updated successfully",
-      data: enquiry,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
   }
-});
+);
 
 export default router;

@@ -510,7 +510,7 @@ export function BookingForm({ services = [] }: BookingFormProps) {
           </div>
 
           <a
-            href="https://wa.me/821012345678"
+            href="https://wa.me/60123456789"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-lg font-sans text-sm hover:bg-[#25D366]/90 transition-colors"

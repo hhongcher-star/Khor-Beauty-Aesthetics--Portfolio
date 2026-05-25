@@ -1,168 +1,117 @@
-import express from "express";
-import prisma from "../utils/prisma";
-import { authMiddleware } from "../middleware/auth.middleware";
+import express from 'express';
+import prisma from '../utils/prisma';
+import { authMiddleware } from '../middleware/auth.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { idParamSchema } from '../schemas/common.schema';
+import { createServiceSchema, updateServiceSchema } from '../schemas/service.schema';
 
 const router = express.Router();
-const categoryOptions = [
-  "Skin Booster",
-  "Facial Treatment",
-  "Anti-Aging",
-  "Brightening",
-  "Hydration",
-  "Body Treatment",
-  "Other",
-];
 
-// GET all services
-router.get("/", async (req, res) => {
+type SerializedService = {
+  price: { toString: () => string } | number | string;
+};
+
+router.get('/', async (req, res) => {
   try {
     const services = await prisma.service.findMany({
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
 
-    res.json(services);
+    res.json(
+      services.map((service: SerializedService) => ({
+        ...service,
+        price: Number(service.price),
+      }))
+    );
   } catch (error) {
-    console.error("GET /services error:", error);
+    console.error('GET /services error:', error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
     });
   }
 });
 
-// GET single service
-// GET single service
-router.get("/:id", async (req, res) => {
+router.get('/:id', validate(idParamSchema, 'params'), async (req, res) => {
   try {
     const { id } = req.params;
 
     const service = await prisma.service.findUnique({
-      where: { id },
+      where: { id: String(id) },
     });
 
     if (!service) {
-      return res.status(404).json({ message: "Service not found" });
+      return res.status(404).json({ message: 'Service not found' });
     }
 
-    res.json(service);
+    res.json({
+      ...service,
+      price: Number(service.price),
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// POST create service
-// POST create service
-router.post("/", authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, validate(createServiceSchema), async (req, res) => {
   try {
-    const { name, description, price, category, active } = req.body;
-
-    if (!name || !description || !price || !category) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (isNaN(Number(price)) || Number(price) <= 0) {
-      return res.status(400).json({ message: "Invalid price" });
-    }
-
-    if (Number(price) > 100000) {
-      return res.status(400).json({ message: "Price is too high" });
-    }
-
-    if (name.trim().length > 100) {
-      return res.status(400).json({ message: "Service name is too long" });
-    }
-
-    if (description.trim().length > 500) {
-      return res.status(400).json({ message: "Description is too long" });
-    }
-
-    if (!categoryOptions.includes(category)) {
-      return res.status(400).json({ message: "Invalid category" });
-    }
-
     const service = await prisma.service.create({
-      data: {
-        name: name.trim(),
-        description: description.trim(),
-        price: Number(price),
-        category,
-        active: Boolean(active),
-      },
+      data: req.body,
     });
 
-    res.json({
-      message: "Service created successfully",
-      data: service,
+    res.status(201).json({
+      message: 'Service created successfully',
+      data: {
+        ...service,
+        price: Number(service.price),
+      },
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
-// PUT update service
-// PUT update service
-router.put("/:id", authMiddleware, async (req, res) => {
-  try {
-    const id = req.params.id as string;
-    const { name, description, price, category, active } = req.body;
 
-    const existingService = await prisma.service.findUnique({
-      where: { id },
-    });
+router.put(
+  '/:id',
+  authMiddleware,
+  validate(idParamSchema, 'params'),
+  validate(updateServiceSchema),
+  async (req, res) => {
+    try {
+      const id = req.params.id as string;
 
-    if (!existingService) {
-      return res.status(404).json({ message: "Service not found" });
+      const existingService = await prisma.service.findUnique({
+        where: { id },
+      });
+
+      if (!existingService) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+
+      const service = await prisma.service.update({
+        where: { id },
+        data: req.body,
+      });
+
+      res.json({
+        message: 'Service updated successfully',
+        data: {
+          ...service,
+          price: Number(service.price),
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
     }
-
-    if (!name || !description || !price || !category) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (isNaN(Number(price)) || Number(price) <= 0) {
-      return res.status(400).json({ message: "Invalid price" });
-    }
-
-    if (Number(price) > 100000) {
-      return res.status(400).json({ message: "Price is too high" });
-    }
-
-    if (name.trim().length > 100) {
-      return res.status(400).json({ message: "Service name is too long" });
-    }
-
-    if (description.trim().length > 500) {
-      return res.status(400).json({ message: "Description is too long" });
-    }
-
-    if (!categoryOptions.includes(category)) {
-      return res.status(400).json({ message: "Invalid category" });
-    }
-
-    const service = await prisma.service.update({
-      where: { id },
-      data: {
-        name: name.trim(),
-        description: description.trim(),
-        price: Number(price),
-        category,
-        active: Boolean(active),
-      },
-    });
-
-    res.json({
-      message: "Service updated successfully",
-      data: service,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
   }
-});
-// DELETE service
-router.delete("/:id", authMiddleware, async (req, res) => {
+);
+
+router.delete('/:id', authMiddleware, validate(idParamSchema, 'params'), async (req, res) => {
   try {
     const id = req.params.id as string;
 
@@ -171,7 +120,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     });
 
     if (!existingService) {
-      return res.status(404).json({ message: "Service not found" });
+      return res.status(404).json({ message: 'Service not found' });
     }
 
     await prisma.service.delete({
@@ -179,11 +128,11 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     });
 
     res.json({
-      message: "Service deleted successfully",
+      message: 'Service deleted successfully',
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

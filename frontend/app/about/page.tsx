@@ -8,8 +8,15 @@ import { CTASection } from '@/components/home/cta-section'
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: 'About Us | LumiÃ¨re Beauty Clinic',
-  description: 'Learn about LumiÃ¨re Beauty Clinic - our story, our team, and our commitment to Korean beauty excellence.',
+  title: 'About Us | Khor Beauty Aesthetics',
+  description: 'Editable business content: learn about Khor Beauty Aesthetics, our story, and our commitment to personalised beauty care in Malaysia.',
+  alternates: { canonical: '/about' },
+  openGraph: {
+    url: '/about',
+    title: 'About Khor Beauty Aesthetics',
+    description:
+      'Editable business content: learn about the people, values, and appointment-led care behind Khor Beauty Aesthetics.',
+  },
 }
 
 export default function AboutPage() {

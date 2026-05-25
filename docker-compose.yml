@@ -25,9 +25,11 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/khor_beauty
-      - JWT_SECRET=your_jwt_secret
-      - PORT=5000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - NODE_ENV=${NODE_ENV}
     depends_on:
       - postgres
 
@@ -36,7 +38,7 @@ services:
     restart: always
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=khor_beauty
     ports:
       - "5432:5432"

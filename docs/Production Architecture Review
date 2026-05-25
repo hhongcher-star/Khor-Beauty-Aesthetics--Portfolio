@@ -1,0 +1,628 @@
+# Khor Beauty Aesthetics Platform
+
+## Production Architecture Review and Technical Handover
+
+### 1. Executive Summary
+
+Khor Beauty Aesthetics is a modern full-stack business platform for a beauty and aesthetic services company. The system includes a public-facing website, an admin dashboard, and a backend API for managing services, bookings, enquiries, and payment records.
+
+The platform targets small to medium beauty clinics, home-service aesthetic providers, facial salons, skincare studios, and appointment-led wellness businesses that need a polished public web presence plus basic operational tooling.
+
+Current maturity level: advanced portfolio / early client-delivery stage. The system is substantially stronger than a static marketing site and includes real backend/API/database architecture. It is not yet fully production-ready because several operational and security features remain incomplete, most notably persistent admin notes/status history, httpOnly cookie authentication, full payment gateway integration, and final production data migration verification.
+
+Overall maturity estimate: 7.1 / 10.
+
+---
+
+### 2. System Architecture
+
+#### Frontend Architecture
+
+The customer-facing frontend is a Next.js application using React components, Tailwind CSS styling, and route-level metadata. It contains the business website pages:
+
+- Home
+- Services
+- Booking
+- About
+- Contact
+
+The frontend communicates with the backend API through a centralized API helper. The site includes SEO metadata, Open Graph metadata, sitemap generation, robots configuration, and LocalBusiness / BeautySalon structured data.
+
+The frontend currently uses editable Khor Beauty Malaysia business content. Final real business details should replace editable placeholders before launch.
+
+#### Backend API Architecture
+
+The backend API is a Node.js / Express application. It exposes REST-style endpoints for:
+
+- Authentication
+- Bookings
+- Services
+- Enquiries
+- Payments
+
+The backend uses:
+
+- Express routing
+- JWT authentication middleware
+- Helmet security headers
+- CORS origin whitelist
+- Rate limiting
+- Zod request validation
+- Prisma ORM
+- PostgreSQL database
+
+The backend has moved from prototype-style route validation to reusable validation middleware and schema-driven input checks.
+
+#### Database Architecture
+
+The database uses PostgreSQL with Prisma schema management.
+
+Core models:
+
+- Admin
+- Service
+- Booking
+- Enquiry
+- Payment
+
+Recent schema improvements include:
+
+- Booking to Service relation
+- Payment to Booking relation
+- Decimal money fields
+- Enum-based status fields
+- Service duration support
+- Updated timestamps
+- Useful indexes
+- Booking uniqueness rule for appointment + serviceId
+
+The schema is now closer to a real operational model, but still lacks persistent admin notes and durable status history tables.
+
+#### Admin Dashboard Architecture
+
+The admin dashboard is a separate Next.js application. It provides operational views for:
+
+- Dashboard overview
+- Bookings
+- Enquiries
+- Services
+- Payments
+- Settings
+
+Recent improvements added:
+
+- Search
+- Filtering
+- Pagination
+- CSV export
+- Empty states
+- Error states
+- Local admin remarks
+- Local status history
+
+Important limitation: admin notes and status history currently use browser localStorage. This is acceptable for demo/portfolio use, but not production-grade multi-admin operations.
+
+#### Authentication Flow
+
+Current flow:
+
+1. Admin submits email/password.
+2. Backend verifies credentials with hashed password.
+3. Backend returns JWT.
+4. Admin app stores JWT in localStorage.
+5. API requests include `Authorization: Bearer <token>`.
+6. Protected API routes validate JWT.
+
+This works but is not the recommended final production security model. Future production flow should use httpOnly secure cookies, SameSite protection, CSRF mitigation, refresh tokens, and session invalidation.
+
+#### Booking Flow
+
+Current booking flow:
+
+1. Customer selects a service.
+2. Customer chooses appointment date/time.
+3. Customer submits contact details.
+4. Frontend sends booking request to API.
+5. API validates request with Zod.
+6. API resolves service by `serviceId` or service name.
+7. API enforces business rules:
+   - Appointment must be in the future.
+   - Sunday bookings are blocked.
+   - Appointment must fit within business hours.
+   - Duplicate same-service same-time bookings are blocked.
+   - Service duration is considered.
+8. Booking is saved in PostgreSQL.
+
+This is a good foundation, but not yet a complete scheduling engine. Staff scheduling, room availability, holidays, cancellation windows, and notifications are still missing.
+
+#### Deployment Flow
+
+The backend deployment flow has been improved to avoid unsafe production startup behavior.
+
+Production startup should not run `prisma db push` or seed automatically.
+
+Recommended backend deployment sequence:
+
+```bash
+npm ci
+npm run db:generate
+npm run build
+npm run db:migrate:deploy
+npm start
+```
+
+Seed is manual only:
+
+```bash
+npm run db:seed
+```
+
+Docker now starts the backend with `npm start`, not `db push` or seed.
+
+---
+
+### 3. Technical Stack
+
+#### Next.js
+
+Used for both the customer-facing frontend and admin dashboard. It provides file-based routing, server/client rendering flexibility, metadata handling, sitemap/robots generation, and a mature React production framework.
+
+#### React
+
+Used for interactive UI components, forms, dashboard views, booking flows, and admin operations.
+
+#### Tailwind CSS
+
+Used for fast, consistent UI styling. It supports responsive layouts, design tokens, and utility-driven interface development.
+
+#### Node.js / Express
+
+Used for the backend API. Express provides a lightweight routing layer and clear separation between routes, controllers, middleware, and services.
+
+#### Prisma
+
+Used as ORM and schema layer. Prisma gives typed database access, schema migrations, relation modeling, and safer database queries than raw SQL for most application code.
+
+#### PostgreSQL
+
+Used as the relational database. PostgreSQL is appropriate for bookings, payments, statuses, service catalogs, and future reporting requirements.
+
+#### Zod
+
+Used for request validation. Zod improves API safety by validating bodies and params before controller logic runs.
+
+#### JWT
+
+Used for admin authentication. Current implementation is functional but should be upgraded before production to httpOnly secure cookie-based sessions.
+
+#### Docker
+
+Used to containerize the API and frontend apps. Docker support is present, but deployment should still be paired with controlled migration execution and environment-specific secrets.
+
+---
+
+### 4. Current Features
+
+#### Frontend / Business Website
+
+- Premium beauty/aesthetic landing experience
+- Services page
+- Booking page
+- About page
+- Contact page
+- Responsive layout
+- Branded Khor Beauty Malaysia content
+- Contact and WhatsApp links
+- Structured page metadata
+- Sitemap and robots generation
+- LocalBusiness / BeautySalon schema
+
+#### Admin Dashboard
+
+- Admin login
+- Booking management view
+- Enquiry management view
+- Service management
+- Payment record management
+- Search and filters
+- Pagination
+- CSV export of filtered records
+- Local admin remarks
+- Local status history
+- Empty states
+- Error states
+
+#### Backend API
+
+- Auth login route
+- Protected admin routes
+- Public booking creation
+- Public enquiry creation
+- Service management
+- Payment record management
+- Request validation middleware
+- Centralized environment validation
+- CORS whitelist
+- Rate limiting
+- Helmet headers
+
+#### Booking Logic
+
+- Future-date validation
+- Business-hour validation
+- Sunday blocking
+- Duplicate service/time prevention
+- Service duration support
+- Service relation support
+
+#### SEO System
+
+- Metadata per main page
+- Canonical URLs
+- Open Graph metadata
+- Twitter card metadata
+- `sitemap.xml`
+- `robots.txt`
+- LocalBusiness / BeautySalon JSON-LD
+- Editable Malaysia business details
+
+#### Validation / Security
+
+- Zod validation for core API inputs
+- Required environment variable validation
+- JWT secret length check
+- CORS whitelist
+- Rate limiting
+- Helmet
+- No production default secrets in compose
+
+#### Deployment Structure
+
+- Separate frontend, admin, and API apps
+- Dockerfiles
+- Docker Compose
+- Production-safe API startup command
+- Manual seed command
+- Prisma migrate deploy script
+- Deployment documentation
+
+---
+
+### 5. Security Review
+
+#### Current Security Level
+
+Current security level: moderate, improved from prototype level.
+
+The system now has a reasonable baseline:
+
+- Environment validation
+- Stronger secret handling
+- CORS whitelist
+- Helmet
+- Rate limiting
+- Zod validation
+- Removed login token logging
+- No automatic production seeding
+
+Security score: 6.7 / 10.
+
+#### JWT / localStorage Risks
+
+The largest remaining security issue is storing admin JWTs in localStorage. This is vulnerable to token theft if XSS is introduced.
+
+Current localStorage JWT is acceptable for portfolio/demo usage, but not ideal for production.
+
+Recommended upgrade:
+
+- httpOnly secure cookies
+- SameSite cookie policy
+- CSRF protection
+- Refresh token rotation
+- Logout/session invalidation
+- Short-lived access tokens
+- Login lockout after repeated failures
+
+#### CORS
+
+CORS has been improved from permissive `origin: true` to whitelist-based origins via `CORS_ORIGINS`.
+
+Production must ensure:
+
+- No wildcard origins
+- Only real frontend/admin domains
+- Localhost only in development
+
+#### Environment Variables
+
+Environment handling is now much stronger:
+
+- Required env vars are validated at startup.
+- JWT secret must be at least 32 characters.
+- `.env` files are ignored.
+- `.env.example` provides safe placeholders.
+
+Remaining risk: deployment platform must actually provide real production secrets.
+
+#### Validation
+
+Zod validation is now in place for:
+
+- Bookings
+- Enquiries
+- Services
+- Payments
+- Params
+
+This significantly reduces malformed input risk.
+
+#### Remaining Production Risks
+
+- localStorage JWT
+- No CSRF system yet
+- No persistent audit log
+- No persistent admin notes/history
+- No login account lockout
+- No password reset flow
+- Prisma engine generation blocked locally by certificate trust
+- Business claims/content still require owner/legal review
+
+---
+
+### 6. Performance Review
+
+#### Frontend Performance
+
+The frontend uses Next.js and builds successfully. Pages are reasonably lightweight and structured.
+
+Performance risks:
+
+- Some images are remote Unsplash/demo images.
+- `images.unoptimized` is still enabled.
+- Several marketing pages are dynamic due to API dependency.
+- More static generation or ISR could improve performance.
+
+Frontend performance score: 7 / 10.
+
+#### Backend/API Scalability
+
+The API is adequate for a small business workload. Express + Prisma + PostgreSQL is a suitable stack for moderate CRUD and booking operations.
+
+Potential bottlenecks:
+
+- No caching layer
+- No queue for notifications
+- No horizontal session strategy
+- Prisma connection limits under high concurrency
+- No database read replicas
+
+Backend scalability score: 6.8 / 10.
+
+#### Database Scalability
+
+Database design has improved with relations, enums, decimals, indexes, and service duration fields.
+
+Remaining database gaps:
+
+- No persistent notes table
+- No status history table
+- No audit log
+- No staff schedule tables
+- No holiday/closure table
+- No customer profile table
+
+Database score: 7 / 10 for small business, 5.8 / 10 for larger operations.
+
+#### SEO Performance
+
+SEO is now substantially stronger:
+
+- Sitemap
+- Robots
+- Canonical URLs
+- Open Graph
+- Structured data
+- Page-level metadata
+
+Remaining SEO risks:
+
+- Final domain must be configured.
+- Real business address must replace editable content.
+- Real images should replace placeholders.
+- Service pages could eventually have individual SEO landing pages.
+
+SEO score: 7.5 / 10.
+
+#### Image Optimization
+
+Current image handling is acceptable for demo but not production-best.
+
+Recommended:
+
+- Replace Unsplash/demo images with real assets.
+- Use Next Image where practical.
+- Configure remote image patterns.
+- Remove `images.unoptimized: true` when deployment supports optimization.
+
+#### Deployment Readiness
+
+Deployment flow is safer now. Production no longer runs automatic `db push` or seed on startup.
+
+Remaining deployment blocker:
+
+- Local Prisma generate fails because Node cannot verify Prisma binary download certificates.
+
+Deployment score: 7 / 10 after certificate issue is resolved.
+
+---
+
+### 7. Scalability Assessment
+
+#### Approximate Concurrent Users
+
+With a single modest Node instance and PostgreSQL database, the system should handle:
+
+- 20-50 concurrent website users comfortably
+- 5-10 concurrent admin users comfortably
+- Hundreds of daily bookings/enquiries under normal small-business usage
+
+This estimate assumes the database is healthy, API deployment has sufficient memory, and Prisma connection limits are configured properly.
+
+#### Small Business Suitability
+
+Good fit. The platform is suitable for a single beauty/aesthetic business, home-service provider, or boutique clinic after final production hardening.
+
+#### Medium Business Suitability
+
+Partially suitable. For multi-branch or multi-staff operations, the current data model needs expansion.
+
+Required medium-business additions:
+
+- Staff scheduling
+- Branch/location model
+- Room/equipment availability
+- Persistent customer profiles
+- Notification workflows
+- Real audit trail
+- Role-based admin permissions
+
+#### First Bottlenecks
+
+Likely first bottlenecks:
+
+1. Prisma/database connection limits
+2. Lack of persistent operational history
+3. Booking logic not handling staff/room conflicts
+4. Manual payment records instead of integrated gateway
+5. localStorage-based admin session model
+
+#### Larger Scale Upgrades
+
+For larger scale:
+
+- Move notes/status history to database
+- Add job queue for email/WhatsApp notifications
+- Add Redis caching/rate-limiting store
+- Add proper session management
+- Add database backups and monitoring
+- Add observability: logs, traces, error tracking
+- Add role-based access control
+- Add automated test coverage
+
+---
+
+### 8. Production Readiness Assessment
+
+| Area | Score | Assessment |
+|---|---:|---|
+| UI/UX | 7.4 / 10 | Visually polished, but still needs real assets and final business copy. |
+| Frontend Engineering | 7.2 / 10 | Solid Next.js structure, SEO improved, builds pass. Some image optimization remains. |
+| Backend Engineering | 7.0 / 10 | API structure, validation, and business rules improved. Needs tests and stronger error/domain modeling. |
+| Database Design | 7.0 / 10 | Relations/enums/decimals added. Missing notes/history/audit/customer models. |
+| Security | 6.7 / 10 | Good baseline, but localStorage JWT prevents full production security rating. |
+| Product Thinking | 7.1 / 10 | Clear booking/admin/product flow. Still missing notification, policy, and payment completeness. |
+| Production Readiness | 6.8 / 10 | Close to client pilot, not yet full production. Prisma certificate/migration execution still pending. |
+| Overall System Maturity | 7.1 / 10 | Strong portfolio-level full-stack system with early production architecture. |
+
+---
+
+### 9. Current Weaknesses
+
+Major remaining weaknesses:
+
+- Prisma generate is blocked locally by certificate trust.
+- Database migration has not been confirmed against a live database.
+- Admin notes and status history are browser-local only.
+- JWT is stored in localStorage.
+- No CSRF protection.
+- No refresh token/session invalidation.
+- No role-based access control beyond basic admin role.
+- No password reset flow.
+- No real payment gateway.
+- No customer notification workflow.
+- No staff scheduling.
+- No branch/location support.
+- No holiday/closure calendar.
+- No persistent audit log.
+- No automated tests.
+- No monitoring/error tracking integration.
+- Image optimization is incomplete.
+- Real business content, address, claims, and photos still need owner approval.
+
+---
+
+### 10. Recommended Next Steps
+
+#### Short-Term Improvements
+
+1. Fix local Prisma certificate trust and run:
+
+```bash
+npm run db:generate
+npm run db:migrate:deploy
+npm run db:seed
+```
+
+2. Set production environment variables:
+
+```bash
+DATABASE_URL
+JWT_SECRET
+PORT
+CORS_ORIGINS
+NODE_ENV
+NEXT_PUBLIC_API_URL
+NEXT_PUBLIC_SITE_URL
+```
+
+3. Replace editable business content with final business-approved details.
+
+4. Replace demo images with real brand assets.
+
+5. Add persistent database tables for admin notes and status history.
+
+#### Mid-Term Improvements
+
+1. Migrate authentication to httpOnly secure cookies.
+2. Add CSRF protection.
+3. Add admin role permissions.
+4. Add email/WhatsApp notification workflow.
+5. Add cancellation/reschedule policies.
+6. Add integration tests for booking validation.
+7. Add API error classes and consistent response structure.
+8. Add service-specific landing pages for SEO.
+
+#### Long-Term Production Upgrades
+
+1. Staff scheduling and availability.
+2. Multi-branch support.
+3. Payment gateway integration.
+4. Customer account/profile system.
+5. Audit logging.
+6. Observability stack.
+7. Queue system for background jobs.
+8. Automated backup strategy.
+9. CI/CD pipeline with migration checks.
+10. Full test suite: unit, integration, E2E.
+
+---
+
+### 11. Final Professional Verdict
+
+This is a credible full-stack portfolio project and an early-stage client system. It demonstrates practical understanding of frontend development, admin tooling, backend API design, Prisma/PostgreSQL modeling, validation, authentication, SEO, and deployment concerns.
+
+It is not a toy project. It has real architecture and meaningful business workflows.
+
+It is also not fully production-ready yet.
+
+Portfolio-quality: yes.
+
+Client-demo-ready: yes, after replacing editable business details and ensuring the API is running.
+
+Client-production-ready: not yet. It requires authentication hardening, persistent operational history, confirmed database migrations, real business content, and deployment verification.
+
+Engineer level represented: intermediate full-stack developer moving toward production-grade engineering. The project shows stronger-than-junior capability, especially after the security, validation, schema, SEO, and deployment improvements. It does not yet represent senior-level production maturity because testing, observability, auth hardening, migration reliability, and operational durability remain incomplete.
+
+Final rating: 7.1 / 10.
+
+With persistent notes/history, httpOnly cookie auth, tested migrations, real payment/notification flows, and final business assets, this could reasonably reach 8+ / 10 for a small-business production platform.

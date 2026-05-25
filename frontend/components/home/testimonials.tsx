@@ -6,15 +6,15 @@ import { Star, Quote } from 'lucide-react'
 const testimonials = [
   {
     id: 1,
-    name: 'Minhee Kim',
+    name: 'Aina Rahman',
     role: 'Regular Client',
-    content: 'The Korean Glass Skin treatment completely transformed my complexion. The team at LumiÃ¨re truly understands skin care at a deeper level.',
+    content: 'Editable business content: my facial session felt calm, professional, and personalised. The team explained each step clearly.',
     rating: 5,
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2070&auto=format&fit=crop',
   },
   {
     id: 2,
-    name: 'Sarah Chen',
+    name: 'Sarah Tan',
     role: 'First Time Visitor',
     content: 'From the moment I walked in, I felt pampered. The ambiance is serene, and the results speak for themselves. My skin has never looked better!',
     rating: 5,
@@ -22,9 +22,9 @@ const testimonials = [
   },
   {
     id: 3,
-    name: 'Jennifer Park',
+    name: 'Mei Ling',
     role: 'VIP Member',
-    content: 'I have been coming to LumiÃ¨re for years. Their attention to detail and personalized approach keeps me coming back. Absolutely worth every penny.',
+    content: 'Editable business content: I appreciate the clean environment, gentle service, and follow-up advice after each appointment.',
     rating: 5,
     image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1988&auto=format&fit=crop',
   },

@@ -1,9 +1,11 @@
 'use client';
 
-
+import { useEffect, useMemo, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -12,258 +14,396 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Search,
-  Download,
-  MessageSquare,
-  Phone,
-  Mail,
-  CheckCircle,
-  Instagram,
-  Globe,
-} from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { apiFetch } from '@/lib/api';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Download, Mail, MessageSquare, Phone, RefreshCw, Search } from 'lucide-react';
 
-const statusOptions = ['All', 'new', 'contacted', 'closed'];
+type Enquiry = {
+  id: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  message: string;
+  source?: string;
+  status: string;
+  createdAt: string;
+};
+
+type StatusHistory = {
+  status: string;
+  at: string;
+};
+
+const statusOptions = ['All', 'New', 'Contacted', 'Closed'];
 const sourceOptions = ['All', 'Website Form', 'WhatsApp', 'Instagram', 'Manual'];
+const pageSizeOptions = [10, 25, 50];
+
+const normalizeStatus = (status: string) => {
+  const value = status.toLowerCase();
+  if (value === 'contacted') return 'Contacted';
+  if (value === 'closed') return 'Closed';
+  return 'New';
+};
+
+const escapeCsv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+
+const downloadCsv = (filename: string, rows: Array<Record<string, unknown>>) => {
+  if (rows.length === 0) return;
+
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.map(escapeCsv).join(','),
+    ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(',')),
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 export default function EnquiriesPage() {
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sourceFilter, setSourceFilter] = useState('All');
-  const [enquiries, setEnquiries] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [history, setHistory] = useState<Record<string, StatusHistory[]>>({});
+
   useEffect(() => {
-  fetchEnquiries();
-}, []);
-
-const fetchEnquiries = async () => {
-  try {
-    const response = await apiFetch('/enquiries');
-
-    if (Array.isArray(response)) {
-      setEnquiries(response);
-    } else {
-      setEnquiries(response.data || []);
-    }
-  } catch (error) {
-    console.error(error);
-    setEnquiries([]);
-  }
-};
-const handleMarkContacted = async (id: string) => {
-  try {
-    await apiFetch(`/enquiries/${id}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        status: 'contacted',
-      }),
-    });
-
     fetchEnquiries();
-  } catch (error) {
-    console.error(error);
-  }
-};
+    setNotes(JSON.parse(localStorage.getItem('enquiryNotes') || '{}'));
+    setHistory(JSON.parse(localStorage.getItem('enquiryStatusHistory') || '{}'));
+  }, []);
 
-const filteredEnquiries = enquiries.filter((enquiry) => {
-  const matchesSearch =
-    enquiry.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    enquiry.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    enquiry.email.toLowerCase().includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, sourceFilter, pageSize]);
 
-  const matchesStatus =
-    statusFilter === 'All' ||
-    enquiry.status === statusFilter;
+  const fetchEnquiries = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
 
-  return matchesSearch && matchesStatus;
-});
+    try {
+      const response = await apiFetch('/enquiries');
+      setEnquiries(Array.isArray(response) ? response : response.data || []);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Unable to load enquiries. Check the API connection and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredEnquiries = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+
+    return enquiries.filter((enquiry) => {
+      const status = normalizeStatus(enquiry.status);
+      const source = enquiry.source || 'Website Form';
+      const matchesSearch =
+        !query ||
+        enquiry.customerName.toLowerCase().includes(query) ||
+        enquiry.message.toLowerCase().includes(query) ||
+        enquiry.email.toLowerCase().includes(query) ||
+        enquiry.phone.toLowerCase().includes(query);
+      const matchesStatus = statusFilter === 'All' || status === statusFilter;
+      const matchesSource = sourceFilter === 'All' || source === sourceFilter;
+
+      return matchesSearch && matchesStatus && matchesSource;
+    });
+  }, [enquiries, searchQuery, sourceFilter, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredEnquiries.length / pageSize));
+  const paginatedEnquiries = filteredEnquiries.slice((page - 1) * pageSize, page * pageSize);
+
+  const saveNotes = (enquiryId: string, note: string) => {
+    const nextNotes = { ...notes, [enquiryId]: note };
+    setNotes(nextNotes);
+    localStorage.setItem('enquiryNotes', JSON.stringify(nextNotes));
+  };
+
+  const updateStatus = async (enquiry: Enquiry, status: string) => {
+    try {
+      await apiFetch(`/enquiries/${enquiry.id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      });
+
+      const nextHistory = {
+        ...history,
+        [enquiry.id]: [
+          ...(history[enquiry.id] || []),
+          { status, at: new Date().toISOString() },
+        ],
+      };
+
+      setHistory(nextHistory);
+      localStorage.setItem('enquiryStatusHistory', JSON.stringify(nextHistory));
+      await fetchEnquiries();
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Unable to update enquiry status.');
+    }
+  };
+
+  const exportFilteredEnquiries = () => {
+    downloadCsv(
+      'filtered-enquiries.csv',
+      filteredEnquiries.map((enquiry) => ({
+        customerName: enquiry.customerName,
+        email: enquiry.email,
+        phone: enquiry.phone,
+        source: enquiry.source || 'Website Form',
+        status: normalizeStatus(enquiry.status),
+        createdAt: new Date(enquiry.createdAt).toLocaleString(),
+        message: enquiry.message,
+        adminNote: notes[enquiry.id] || '',
+      }))
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search enquiries..."
+            placeholder="Search name, message, email, or phone..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 rounded-xl bg-card border-border/50"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="h-11 rounded-xl bg-card pl-10"
           />
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+
+        <div className="flex flex-wrap gap-3">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px] h-11 rounded-xl bg-card border-border/50">
+            <SelectTrigger className="h-11 w-[145px] rounded-xl bg-card">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
+                <SelectItem key={status} value={status}>{status}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+
           <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-[150px] h-11 rounded-xl bg-card border-border/50">
+            <SelectTrigger className="h-11 w-[155px] rounded-xl bg-card">
               <SelectValue placeholder="Source" />
             </SelectTrigger>
             <SelectContent>
               {sourceOptions.map((source) => (
-                <SelectItem key={source} value={source}>
-                  {source}
-                </SelectItem>
+                <SelectItem key={source} value={source}>{source}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            className="h-11 rounded-xl border-border/50 hover:bg-secondary/30"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
+
+          <Button variant="outline" className="h-11 rounded-xl" onClick={fetchEnquiries}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <Button variant="outline" className="h-11 rounded-xl" onClick={exportFilteredEnquiries} disabled={filteredEnquiries.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
           </Button>
         </div>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-foreground">{enquiries.length}</p>
-          <p className="text-xs text-muted-foreground">Total Enquiries</p>
+      {errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {errorMessage}
         </div>
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-pink-600">
-            {enquiries.filter((e) => e.status === 'new').length}
-          </p>
-          <p className="text-xs text-muted-foreground">New</p>
-        </div>
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-blue-600">
-            {enquiries.filter((e) => e.status === 'contacted').length}
-          </p>
-          <p className="text-xs text-muted-foreground">Contacted</p>
-        </div>
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-gray-600">
-            {enquiries.filter((e) => e.status === 'closed').length}
-          </p>
-          <p className="text-xs text-muted-foreground">Closed</p>
-        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Metric label="Total" value={enquiries.length} />
+        <Metric label="New" value={enquiries.filter((enquiry) => normalizeStatus(enquiry.status) === 'New').length} />
+        <Metric label="Contacted" value={enquiries.filter((enquiry) => normalizeStatus(enquiry.status) === 'Contacted').length} />
+        <Metric label="Filtered" value={filteredEnquiries.length} />
       </div>
 
-      {/* Enquiries Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredEnquiries.map((enquiry) => (
-          <EnquiryCard
-  key={enquiry.id}
-  enquiry={enquiry}
-  onMarkContacted={handleMarkContacted}
-/>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        {paginatedEnquiries.map((enquiry) => (
+          <div key={enquiry.id} className="rounded-2xl border border-border/50 bg-card p-5 shadow-sm">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="font-medium">{enquiry.customerName}</p>
+                <p className="text-xs text-muted-foreground">{enquiry.source || 'Website Form'} · {new Date(enquiry.createdAt).toLocaleDateString()}</p>
+              </div>
+              <StatusBadge status={normalizeStatus(enquiry.status)} />
+            </div>
+
+            <p className="mb-4 rounded-xl bg-muted/30 p-4 text-sm leading-relaxed">{enquiry.message}</p>
+
+            <div className="mb-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{enquiry.phone}</span>
+              <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{enquiry.email}</span>
+              {notes[enquiry.id] && <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />Has note</span>}
+            </div>
+
+            <div className="flex flex-wrap gap-2 border-t pt-4">
+              <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setSelectedEnquiry(enquiry)}>
+                View / Notes
+              </Button>
+              {['New', 'Contacted', 'Closed'].map((status) => (
+                <Button
+                  key={status}
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-lg"
+                  onClick={() => updateStatus(enquiry, status)}
+                  disabled={normalizeStatus(enquiry.status) === status}
+                >
+                  {status}
+                </Button>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
-      {filteredEnquiries.length === 0 && (
-        <div className="bg-card rounded-2xl border border-border/50 p-12 text-center">
-          <MessageSquare className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-          <p className="text-muted-foreground">No enquiries found</p>
-          <p className="text-sm text-muted-foreground/70">Try adjusting your search or filters</p>
-        </div>
+      {!isLoading && filteredEnquiries.length === 0 && (
+        <EmptyState title="No enquiries found" description="Try changing the search term or filters." />
       )}
+
+      {isLoading && (
+        <EmptyState title="Loading enquiries" description="Fetching latest enquiry records..." />
+      )}
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={filteredEnquiries.length}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+
+      <Dialog open={Boolean(selectedEnquiry)} onOpenChange={(open) => !open && setSelectedEnquiry(null)}>
+        <DialogContent className="sm:max-w-[680px] rounded-2xl">
+          {selectedEnquiry && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Enquiry Details</DialogTitle>
+                <DialogDescription>Review enquiry details, admin notes, and local status history.</DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="rounded-xl border p-4">
+                  <p className="font-medium">{selectedEnquiry.customerName}</p>
+                  <p className="text-sm text-muted-foreground">{selectedEnquiry.email}</p>
+                  <p className="text-sm text-muted-foreground">{selectedEnquiry.phone}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="enquiryNote">Admin remarks</Label>
+                  <textarea
+                    id="enquiryNote"
+                    value={notes[selectedEnquiry.id] || ''}
+                    onChange={(event) => saveNotes(selectedEnquiry.id, event.target.value)}
+                    className="min-h-28 w-full rounded-xl border bg-background p-3 text-sm"
+                    placeholder="Add internal follow-up notes, customer preferences, or call outcome..."
+                  />
+                </div>
+
+                <div className="rounded-xl border p-4">
+                  <p className="mb-3 text-sm font-medium">Status history</p>
+                  {(history[selectedEnquiry.id] || []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No local status changes recorded yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {history[selectedEnquiry.id].map((entry, index) => (
+                        <p key={`${entry.at}-${index}`} className="text-sm text-muted-foreground">
+                          {entry.status} · {new Date(entry.at).toLocaleString()}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button className="rounded-xl" onClick={() => setSelectedEnquiry(null)}>Done</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function EnquiryCard({
-  enquiry,
-  onMarkContacted,
-}: {
-  enquiry: any;
-  onMarkContacted: (id: string) => void;
-}) {
-  
-
-  const getSourceIcon = (source: string) => {
-    switch (source) {
-      case 'WhatsApp':
-        return <Phone className="h-4 w-4" />;
-      case 'Instagram':
-        return <Instagram className="h-4 w-4" />;
-      case 'Website Form':
-        return <Globe className="h-4 w-4" />;
-      default:
-        return <MessageSquare className="h-4 w-4" />;
-    }
-  };
-
+function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-secondary/50 flex items-center justify-center">
-            <span className="text-sm font-medium text-foreground">
-              {enquiry.customerName.split(' ').map((n) => n[0]).join('')}
-            </span>
-          </div>
-          <div>
-            <p className="font-medium text-foreground">{enquiry.customerName}</p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {getSourceIcon('Website Form')}
-<span>Website Form</span>
-            </div>
-          </div>
-        </div>
-        <StatusBadge status={enquiry.status} />
-      </div>
+    <div className="rounded-xl border border-border/50 bg-card p-4">
+      <p className="text-2xl font-semibold">{value}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+}
 
-      {/* Message */}
-      <div className="bg-muted/30 rounded-xl p-4 mb-4">
-        <p className="text-sm text-foreground leading-relaxed">{enquiry.message}</p>
-      </div>
+function EmptyState({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="rounded-2xl border border-border/50 bg-card p-12 text-center">
+      <MessageSquare className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+      <p className="font-medium">{title}</p>
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </div>
+  );
+}
 
-      {/* Contact Info */}
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-4">
-        <span className="flex items-center gap-1">
-          <Phone className="h-3 w-3" />
-          {enquiry.phone}
-        </span>
-        <span className="flex items-center gap-1">
-          <Mail className="h-3 w-3" />
-          {enquiry.email}
-        </span>
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-border/50">
-        <p className="text-xs text-muted-foreground">{new Date(enquiry.createdAt).toLocaleDateString()}</p>
-        <div className="flex items-center gap-2">
-          <Button
-  variant="outline"
-  size="sm"
-  onClick={() => onMarkContacted(enquiry.id)}
-  className="h-8 rounded-lg text-xs border-border/50 hover:bg-secondary/30"
->
-  <CheckCircle className="h-3 w-3 mr-1" />
-  Mark Contacted
-</Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 rounded-lg text-xs bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-          >
-            <Phone className="h-3 w-3 mr-1" />
-            WhatsApp
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 rounded-lg text-xs border-border/50 hover:bg-secondary/30"
-          >
-            <Mail className="h-3 w-3 mr-1" />
-            Email
-          </Button>
-        </div>
+function Pagination({
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-muted-foreground">
+        Showing {total === 0 ? 0 : (page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} of {total}
+      </p>
+      <div className="flex items-center gap-2">
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="h-9 w-[90px] rounded-lg">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {pageSizeOptions.map((size) => (
+              <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
+        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
+          Next
+        </Button>
       </div>
     </div>
   );

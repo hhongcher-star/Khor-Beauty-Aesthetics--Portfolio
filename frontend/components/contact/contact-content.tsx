@@ -12,17 +12,17 @@ const contactInfo = [
   {
     icon: MapPin,
     title: 'Visit Us',
-    details: ['123 Beauty Lane, Suite 100', 'Seoul, South Korea'],
+    details: ['Editable business address', 'Kuala Lumpur, Malaysia'],
   },
   {
     icon: Phone,
     title: 'Call Us',
-    details: ['+82 10 1234 5678', '+82 2 1234 5678'],
+    details: ['+60 12 345 6789', '+60 3 1234 5678'],
   },
   {
     icon: Mail,
     title: 'Email Us',
-    details: ['hello@Khor.com', 'booking@khor.com'],
+    details: ['hello@khorbeauty.my', 'booking@khorbeauty.my'],
   },
   {
     icon: Clock,
@@ -223,7 +223,7 @@ export function ContactContent() {
 
             <div className="mt-10">
               <a
-                href="https://wa.me/821012345678"
+                href="https://wa.me/60123456789"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 bg-[#25D366] text-white px-6 py-4 rounded-lg font-sans text-sm hover:bg-[#25D366]/90 transition-colors"
@@ -237,14 +237,14 @@ export function ContactContent() {
               <h3 className="font-light text-lg mb-4">Follow Us</h3>
               <div className="flex gap-4">
                 <a
-                  href="#"
+                  href="https://instagram.com/khorbeauty"
                   className="w-12 h-12 border border-border rounded-full flex items-center justify-center hover:bg-primary/10 hover:border-primary/50 transition-colors"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://facebook.com/khorbeauty"
                   className="w-12 h-12 border border-border rounded-full flex items-center justify-center hover:bg-primary/10 hover:border-primary/50 transition-colors"
                   aria-label="Facebook"
                 >
@@ -255,7 +255,7 @@ export function ContactContent() {
 
             <div className="mt-10 aspect-video bg-muted rounded-lg overflow-hidden">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3164.269152776842!2d126.97796611531066!3d37.56682997979876!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357ca2eb421c44ad%3A0xe955a50c118085f1!2sSeoul%2C%20South%20Korea!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"
+                src="https://www.google.com/maps?q=Kuala%20Lumpur%20Malaysia&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

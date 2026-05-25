@@ -64,13 +64,13 @@ export function OurStory() {
             </h2>
             <div className="space-y-6 font-sans text-muted-foreground leading-relaxed">
               <p>
-                LumiÃ¨re Beauty Clinic was founded with a simple yet profound vision: to bring the transformative power of Korean skincare to discerning clients who seek nothing but the best for their skin.
+                Editable business content: Khor Beauty Aesthetics was created for clients in Malaysia who want thoughtful, premium beauty care without a rushed clinic experience.
               </p>
               <p>
-                Our founder, Dr. Soo-yeon Park, trained extensively in Seoul before bringing her expertise to establish LumiÃ¨re. With over 15 years of experience in advanced aesthetics, she has cultivated a team of specialists who share her passion for excellence.
+                Our team focuses on personalised consultations, clear treatment planning, and a calm appointment experience designed around each client&apos;s skin goals.
               </p>
               <p>
-                Today, we continue to honor the time-tested traditions of Korean beauty while embracing cutting-edge technology. Every treatment at LumiÃ¨re is a harmonious blend of ancient wisdom and modern science.
+                Every treatment menu item is editable business content and should be reviewed by the business owner before launch to reflect licensed services, real credentials, and approved claims.
               </p>
             </div>
           </div>

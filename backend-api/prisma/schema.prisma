@@ -7,36 +7,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BookingStatus {
+  Pending
+  Confirmed
+  Completed
+  Cancelled
+}
+
+enum BookingPaymentStatus {
+  Unpaid
+  DepositPaid
+  FullyPaid
+  Refunded
+}
+
+enum EnquiryStatus {
+  New
+  Contacted
+  Closed
+}
+
+enum PaymentStatus {
+  Pending
+  Paid
+  Failed
+  Refunded
+}
+
+enum PaymentMethod {
+  BankTransfer
+  FPX
+  TouchNGoEWallet
+  CreditDebitCard
+  Cash
+}
+
 model Booking {
-  id            String   @id @default(cuid())
-  customerName  String
-  email         String
-  phone         String
-  service       String
-  appointment   DateTime
-  status        String   @default("Pending")
-  paymentStatus String   @default("Unpaid")
-  createdAt     DateTime @default(now())
+  id             String               @id @default(cuid())
+  customerName   String
+  email          String
+  phone          String
+  serviceId      String?
+  service        Service?             @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceName    String
+  appointment    DateTime
+  status         BookingStatus        @default(Pending)
+  paymentStatus  BookingPaymentStatus @default(Unpaid)
+  payments       Payment[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([serviceId])
+  @@index([appointment])
+  @@unique([appointment, serviceId])
 }
 model Enquiry {
-  id           String   @id @default(cuid())
+  id           String        @id @default(cuid())
   customerName String
   email        String
   phone        String
   message      String
   source       String   @default("Website Form")
-  status       String   @default("new")
-  createdAt    DateTime @default(now())
+  status       EnquiryStatus @default(New)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Service {
   id          String   @id @default(cuid())
   name        String
   description String
-  price       Float
+  price       Decimal  @db.Decimal(10, 2)
+  durationMin Int      @default(60)
   category    String?
   active      Boolean  @default(true)
+  bookings    Booking[]
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+  @@index([category])
 }
 model Admin {
   id        String   @id @default(cuid())
@@ -47,14 +100,19 @@ model Admin {
   createdAt DateTime @default(now())
 }
 model Payment {
-  id          String   @id @default(cuid())
-  bookingId   String?
-  bookingRef  String?
+  id           String        @id @default(cuid())
+  bookingId    String?
+  booking      Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  bookingRef   String?
   customerName String
-  amount      Float
-  method      String
-  status      String   @default("Pending")
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  amount       Decimal       @db.Decimal(10, 2)
+  method       PaymentMethod
+  status       PaymentStatus @default(Pending)
+  date         DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([createdAt])
 }

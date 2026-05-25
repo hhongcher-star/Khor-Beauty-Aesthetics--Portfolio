@@ -2,12 +2,19 @@
 import { Footer } from '@/components/layout/footer'
 import { BookingForm } from '@/components/booking/booking-form'
 import { apiRequest } from '@/lib/api'
-export const dynamic = "force-dynamic";``
+export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: 'Book Appointment | Lumière Beauty Clinic',
+  title: 'Book Appointment | Khor Beauty Aesthetics',
   description:
-    'Schedule your luxury skincare treatment at Lumière Beauty Clinic. Choose your service, select a date, and experience Korean beauty at its finest.',
+    'Editable business content: schedule your Khor Beauty treatment, choose a service, and request your preferred appointment time.',
+  alternates: { canonical: '/booking' },
+  openGraph: {
+    url: '/booking',
+    title: 'Book an Appointment with Khor Beauty Aesthetics',
+    description:
+      'Editable business content: request your preferred treatment date and time with Khor Beauty Aesthetics.',
+  },
 }
 
 export default async function BookingPage() {

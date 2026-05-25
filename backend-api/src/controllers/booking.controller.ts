@@ -5,6 +5,26 @@ import {
   updateBooking,
   deleteBooking,
 } from '../services/booking.service';
+import { CreateBookingInput, UpdateBookingInput } from '../schemas/booking.schema';
+
+const badRequestMessages = [
+  'Selected service is not available',
+  'Appointment must be in the future',
+  'Bookings are not available on Sundays',
+  'Appointment must be within business hours',
+  'This service already has a booking at the selected time',
+  'Service is required',
+];
+
+const handleControllerError = (res: Response, error: unknown, fallback: string) => {
+  const message = error instanceof Error ? error.message : fallback;
+  const status = badRequestMessages.includes(message) ? 400 : message === 'Booking not found' ? 404 : 500;
+
+  res.status(status).json({
+    success: false,
+    message: status === 500 ? fallback : message,
+  });
+};
 
 export const getBookings = async (req: Request, res: Response) => {
   try {
@@ -16,24 +36,16 @@ export const getBookings = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch bookings',
-    });
+    handleControllerError(res, error, 'Failed to fetch bookings');
   }
 };
 
-export const addBooking = async (req: Request, res: Response) => {
+export const addBooking = async (
+  req: Request<Record<string, never>, unknown, CreateBookingInput>,
+  res: Response
+) => {
   try {
-    const { customerName, email, phone, service, appointment } = req.body;
-
-    const booking = await createBooking({
-      customerName,
-      email,
-      phone,
-      service,
-      appointment,
-    });
+    const booking = await createBooking(req.body);
 
     res.status(201).json({
       success: true,
@@ -41,18 +53,16 @@ export const addBooking = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create booking',
-    });
+    handleControllerError(res, error, 'Failed to create booking');
   }
 };
 
-export const editBooking = async (req: Request, res: Response) => {
+export const editBooking = async (
+  req: Request<{ id: string }, unknown, UpdateBookingInput>,
+  res: Response
+) => {
   try {
-    const id = req.params.id as string;
-
-    const updatedBooking = await updateBooking(id, req.body);
+    const updatedBooking = await updateBooking(req.params.id, req.body);
 
     res.status(200).json({
       success: true,
@@ -60,18 +70,13 @@ export const editBooking = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update booking',
-    });
+    handleControllerError(res, error, 'Failed to update booking');
   }
 };
 
-export const removeBooking = async (req: Request, res: Response) => {
+export const removeBooking = async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const id = req.params.id as string;
-
-    await deleteBooking(id);
+    await deleteBooking(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -79,9 +84,6 @@ export const removeBooking = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete booking',
-    });
+    handleControllerError(res, error, 'Failed to delete booking');
   }
 };

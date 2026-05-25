@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { StatusBadge } from '@/components/admin/status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -13,36 +14,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-DropdownMenuSubContent,
-DropdownMenuSubTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import {
-  Search,
-  Plus,
-  MoreHorizontal,
-  Eye,
-  Pencil,
-  Trash2,
-  RefreshCw,
-  Calendar,
-} from 'lucide-react';
-import { apiFetch } from '@/lib/api'
+import { Calendar, Download, FileText, RefreshCw, Search } from 'lucide-react';
+
 type Booking = {
   id: string;
   customerName: string;
@@ -53,670 +33,388 @@ type Booking = {
   paymentStatus?: string;
   appointment: string;
 };
+
+type StatusHistory = {
+  status: string;
+  at: string;
+};
+
 const statusOptions = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled'];
 const paymentStatusOptions = ['All', 'Unpaid', 'Deposit Paid', 'Fully Paid', 'Refunded'];
+const pageSizeOptions = [10, 25, 50];
+
+const escapeCsv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+
+const downloadCsv = (filename: string, rows: Array<Record<string, unknown>>) => {
+  if (rows.length === 0) return;
+
+  const headers = Object.keys(rows[0]);
+  const csv = [
+    headers.map(escapeCsv).join(','),
+    ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(',')),
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 export default function BookingsPage() {
-
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [paymentFilter, setPaymentFilter] = useState('All');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [history, setHistory] = useState<Record<string, StatusHistory[]>>({});
 
   useEffect(() => {
-    
     fetchBookings();
+    setNotes(JSON.parse(localStorage.getItem('bookingNotes') || '{}'));
+    setHistory(JSON.parse(localStorage.getItem('bookingStatusHistory') || '{}'));
   }, []);
 
- 
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, paymentFilter, pageSize]);
+
   const fetchBookings = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+
     try {
       const response = await apiFetch('/bookings');
-
-if (Array.isArray(response)) {
-  setBookings(response);
-} else {
-  setBookings(response.data || []);
-}
+      setBookings(Array.isArray(response) ? response : response.data || []);
     } catch (error) {
       console.error(error);
-
+      setErrorMessage('Unable to load bookings. Check the API connection and try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
-  const handleViewBooking = (booking: Booking) => {
-  setSelectedBooking(booking);
-  setIsViewDialogOpen(true);
-};
-const [addForm, setAddForm] = useState({
-  customerName: '',
-  email: '',
-  phone: '',
-  service: '',
-  date: '',
-  time: '',
-});
-const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-const [editForm, setEditForm] = useState({
-  id: '',
-  customerName: '',
-  email: '',
-  phone: '',
-  service: '',
-  date: '',
-  time: '',
-  status: 'Pending',
-  paymentStatus: 'Unpaid',
-});
-  const filteredBookings = bookings.filter((booking) => {
-    const matchesSearch =
-      booking.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || booking.status === statusFilter;
-    const matchesPayment = paymentFilter === 'All' || booking.paymentStatus === paymentFilter;
-    return matchesSearch && matchesStatus && matchesPayment;
-  });
-  const handleDeleteBooking = async (id: string) => {
-  try {
-    await apiFetch(`/bookings/${id}`, {
-      method: 'DELETE',
+  const filteredBookings = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+
+    return bookings.filter((booking) => {
+      const matchesSearch =
+        !query ||
+        booking.customerName.toLowerCase().includes(query) ||
+        booking.service.toLowerCase().includes(query) ||
+        booking.email.toLowerCase().includes(query) ||
+        booking.phone.toLowerCase().includes(query);
+
+      const matchesStatus = statusFilter === 'All' || booking.status === statusFilter;
+      const matchesPayment = paymentFilter === 'All' || booking.paymentStatus === paymentFilter;
+
+      return matchesSearch && matchesStatus && matchesPayment;
     });
+  }, [bookings, paymentFilter, searchQuery, statusFilter]);
 
-    fetchBookings();
-  } catch (error) {
-    console.error(error);
-    
-  }
-};
-const handleCreateBooking = async () => {
-  try {
-    await apiFetch('/bookings', {
-      method: 'POST',
-      body: JSON.stringify({
-        customerName: addForm.customerName,
-        email: addForm.email,
-        phone: addForm.phone,
-        service: addForm.service,
-        appointment: new Date(`${addForm.date}T${addForm.time}`).toISOString(),
-        status: 'Pending',
-        paymentStatus: 'Unpaid',
-      }),
-    });
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+  const paginatedBookings = filteredBookings.slice((page - 1) * pageSize, page * pageSize);
 
-    setIsAddDialogOpen(false);
-    setAddForm({
-      customerName: '',
-      email: '',
-      phone: '',
-      service: '',
-      date: '',
-      time: '',
-    });
+  const saveNotes = (bookingId: string, note: string) => {
+    const nextNotes = { ...notes, [bookingId]: note };
+    setNotes(nextNotes);
+    localStorage.setItem('bookingNotes', JSON.stringify(nextNotes));
+  };
 
-    fetchBookings();
-  } catch (error) {
-    console.error(error);
-  }
-};
-const handleUpdateStatus = async (id: string, status: string) => {
-  try {
-    await apiFetch(`/bookings/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        status,
-      }),
-    });
+  const updateStatus = async (booking: Booking, status: string) => {
+    try {
+      await apiFetch(`/bookings/${booking.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      });
 
-    fetchBookings();
-  } catch (error) {
-    console.error(error);
-  }
-};
-const handleOpenEdit = (booking: Booking) => {
-  const appointment = new Date(booking.appointment);
+      const nextHistory = {
+        ...history,
+        [booking.id]: [
+          ...(history[booking.id] || []),
+          { status, at: new Date().toISOString() },
+        ],
+      };
 
-  setEditForm({
-    id: booking.id,
-    customerName: booking.customerName,
-    email: booking.email,
-    phone: booking.phone,
-    service: booking.service,
-    date: appointment.toISOString().split('T')[0],
-    time: appointment.toTimeString().slice(0, 5),
-    status: booking.status,
-    paymentStatus: booking.paymentStatus || 'Unpaid',
-  });
+      setHistory(nextHistory);
+      localStorage.setItem('bookingStatusHistory', JSON.stringify(nextHistory));
+      await fetchBookings();
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Unable to update booking status.');
+    }
+  };
 
-  setIsEditDialogOpen(true);
-};
-const handleEditBooking = async () => {
-  try {
-    await apiFetch(`/bookings/${editForm.id}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        customerName: editForm.customerName,
-        email: editForm.email,
-        phone: editForm.phone,
-        service: editForm.service,
-        appointment: new Date(`${editForm.date}T${editForm.time}`).toISOString(),
-        status: editForm.status,
-        paymentStatus: editForm.paymentStatus,
-      }),
-    });
-
-    setIsEditDialogOpen(false);
-    fetchBookings();
-  } catch (error) {
-    console.error(error);
-  }
-};
+  const exportFilteredBookings = () => {
+    downloadCsv(
+      'filtered-bookings.csv',
+      filteredBookings.map((booking) => ({
+        customerName: booking.customerName,
+        email: booking.email,
+        phone: booking.phone,
+        service: booking.service,
+        appointment: new Date(booking.appointment).toLocaleString(),
+        status: booking.status,
+        paymentStatus: booking.paymentStatus || 'Unpaid',
+        adminNote: notes[booking.id] || '',
+      }))
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, service, or email..."
+            placeholder="Search name, service, email, or phone..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 rounded-xl bg-card border-border/50"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="h-11 rounded-xl bg-card pl-10"
           />
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+
+        <div className="flex flex-wrap gap-3">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] h-11 rounded-xl bg-card border-border/50">
+            <SelectTrigger className="h-11 w-[145px] rounded-xl bg-card">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
+                <SelectItem key={status} value={status}>{status}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+
           <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-            <SelectTrigger className="w-[150px] h-11 rounded-xl bg-card border-border/50">
+            <SelectTrigger className="h-11 w-[155px] rounded-xl bg-card">
               <SelectValue placeholder="Payment" />
             </SelectTrigger>
             <SelectContent>
               {paymentStatusOptions.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
+                <SelectItem key={status} value={status}>{status}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Booking
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-2xl">
-              <DialogHeader>
-                <DialogTitle className="font-serif text-xl">New Booking</DialogTitle>
-                <DialogDescription>
-                  Add a new customer booking. Fill in all the required details.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Customer Name</Label>
-                    <Input id="name" placeholder="Full name"  value={addForm.customerName} onChange={(e) => setAddForm({ ...addForm, customerName: e.target.value })} className="rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" placeholder="012-345 6789"value={addForm.phone} onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })} className="rounded-xl" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="email@example.com"   value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} className="rounded-xl" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="service">Service</Label>
-                  <Select  value={addForm.service} onValueChange={(value) =>setAddForm({ ...addForm, service: value })}>
-                    <SelectTrigger className="rounded-xl">
-                      <SelectValue placeholder="Select a service" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="skin-booster">Skin Booster Treatment</SelectItem>
-                      <SelectItem value="korean-glow">Korean Glow Facial</SelectItem>
-                      <SelectItem value="brightening">Brightening Treatment</SelectItem>
-                      <SelectItem value="anti-aging">Anti-Aging Rejuvenation</SelectItem>
-                      <SelectItem value="hydration">Hydration Facial</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Preferred Date</Label>
-                    <Input id="date" type="date"value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })} className="rounded-xl" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="time">Preferred Time</Label>
-                    <Input id="time" type="time" value={addForm.time} onChange={(e) => setAddForm({ ...addForm, time: e.target.value })}  className="rounded-xl" />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl">
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateBooking} className="rounded-xl bg-primary hover:bg-primary/90">
-                  Create Booking
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+
+          <Button variant="outline" className="h-11 rounded-xl" onClick={fetchBookings}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <Button variant="outline" className="h-11 rounded-xl" onClick={exportFilteredBookings} disabled={filteredBookings.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
         </div>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-foreground">{bookings.length}</p>
-          <p className="text-xs text-muted-foreground">Total Bookings</p>
+      {errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {errorMessage}
         </div>
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-amber-600">
-            {bookings.filter((b) => b.status === 'Pending').length}
-          </p>
-          <p className="text-xs text-muted-foreground">Pending</p>
-        </div>
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-emerald-600">
-            {bookings.filter((b) => b.status === 'Confirmed').length}
-          </p>
-          <p className="text-xs text-muted-foreground">Confirmed</p>
-        </div>
-        <div className="bg-card rounded-xl p-4 border border-border/50">
-          <p className="text-2xl font-semibold text-blue-600">
-            {bookings.filter((b) => b.status === 'Completed').length}
-          </p>
-          <p className="text-xs text-muted-foreground">Completed</p>
-        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Metric label="Total" value={bookings.length} />
+        <Metric label="Pending" value={bookings.filter((booking) => booking.status === 'Pending').length} />
+        <Metric label="Confirmed" value={bookings.filter((booking) => booking.status === 'Confirmed').length} />
+        <Metric label="Filtered" value={filteredBookings.length} />
       </div>
 
-      {/* Bookings Table */}
-      <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead>
-              <tr className="bg-muted/30 border-b border-border/50">
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-5 py-4">
-                  Customer
-                </th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-5 py-4">
-                  Service
-                </th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-5 py-4">
-                  Date & Time
-                </th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-5 py-4">
-                  Status
-                </th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-5 py-4">
-                  Payment
-                </th>
-                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-5 py-4">
-                  Actions
-                </th>
+            <thead className="border-b bg-muted/30">
+              <tr>
+                {['Customer', 'Service', 'Date & Time', 'Status', 'Payment', 'Note', 'Actions'].map((header) => (
+                  <th key={header} className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
-              {filteredBookings.map((booking) => (
-              <BookingRow
-  key={booking.id}
-  booking={booking}
-  onDelete={handleDeleteBooking}
-  onView={handleViewBooking}
-  onUpdateStatus={handleUpdateStatus}
-  onEdit={handleOpenEdit}
-/>
+              {paginatedBookings.map((booking) => (
+                <tr key={booking.id} className="hover:bg-muted/20">
+                  <td className="px-5 py-4 text-sm">
+                    <p className="font-medium">{booking.customerName}</p>
+                    <p className="text-xs text-muted-foreground">{booking.phone}</p>
+                    <p className="text-xs text-muted-foreground">{booking.email}</p>
+                  </td>
+                  <td className="px-5 py-4 text-sm">{booking.service}</td>
+                  <td className="px-5 py-4 text-sm">
+                    <p>{new Date(booking.appointment).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(booking.appointment).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </td>
+                  <td className="px-5 py-4"><StatusBadge status={booking.status} /></td>
+                  <td className="px-5 py-4"><StatusBadge status={booking.paymentStatus || 'Unpaid'} /></td>
+                  <td className="px-5 py-4 text-xs text-muted-foreground">
+                    {notes[booking.id] ? 'Has note' : 'No note'}
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setSelectedBooking(booking)}>
+                        View
+                      </Button>
+                      {['Pending', 'Confirmed', 'Completed', 'Cancelled'].map((status) => (
+                        <Button
+                          key={status}
+                          variant="ghost"
+                          size="sm"
+                          className="rounded-lg"
+                          onClick={() => updateStatus(booking, status)}
+                          disabled={booking.status === status}
+                        >
+                          {status}
+                        </Button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {filteredBookings.length === 0 && (
-          <div className="text-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-            <p className="text-muted-foreground">No bookings found</p>
-            <p className="text-sm text-muted-foreground/70">Try adjusting your search or filters</p>
-          </div>
+
+        {!isLoading && filteredBookings.length === 0 && (
+          <EmptyState title="No bookings found" description="Try changing the search term or filters." />
         )}
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-  <DialogContent className="sm:max-w-[650px] rounded-2xl">
-    <DialogHeader>
-      <DialogTitle className="font-serif text-2xl">
-        Booking Details
-      </DialogTitle>
-      <DialogDescription>
-        Review the customer appointment and payment information.
-      </DialogDescription>
-    </DialogHeader>
 
-    {selectedBooking && (
-      <div className="space-y-6 py-2">
-        <div className="rounded-2xl border border-border/50 bg-muted/20 p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Customer
-              </p>
-              <h3 className="text-xl font-semibold text-foreground">
-                {selectedBooking.customerName}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {selectedBooking.email}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {selectedBooking.phone}
-              </p>
-            </div>
+        {isLoading && (
+          <EmptyState title="Loading bookings" description="Fetching latest booking records..." />
+        )}
 
-            <StatusBadge status={selectedBooking.status} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-xl border border-border/50 p-4">
-            <p className="text-xs text-muted-foreground mb-1">Service</p>
-            <p className="font-medium">{selectedBooking.service}</p>
-          </div>
-
-          <div className="rounded-xl border border-border/50 p-4">
-            <p className="text-xs text-muted-foreground mb-1">Payment Status</p>
-            <StatusBadge status={selectedBooking.paymentStatus || 'Unpaid'} />
-          </div>
-
-          <div className="rounded-xl border border-border/50 p-4">
-            <p className="text-xs text-muted-foreground mb-1">Appointment Date</p>
-            <p className="font-medium">
-              {new Date(selectedBooking.appointment).toLocaleDateString()}
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-border/50 p-4">
-            <p className="text-xs text-muted-foreground mb-1">Appointment Time</p>
-            <p className="font-medium">
-              {new Date(selectedBooking.appointment).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-          </div>
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsViewDialogOpen(false)}
-            className="rounded-xl"
-          >
-            Close
-          </Button>
-
-          <Button className="rounded-xl">
-            Edit Booking
-          </Button>
-        </DialogFooter>
-      </div>
-    )}
-  </DialogContent>
-</Dialog>
-<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-  <DialogContent className="sm:max-w-[500px] rounded-2xl">
-    <DialogHeader>
-      <DialogTitle className="font-serif text-xl">Edit Booking</DialogTitle>
-      <DialogDescription>
-        Update the customer booking details.
-      </DialogDescription>
-    </DialogHeader>
-
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Customer Name</Label>
-          <Input
-            value={editForm.customerName}
-            onChange={(e) =>
-              setEditForm({ ...editForm, customerName: e.target.value })
-            }
-            className="rounded-xl"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Phone Number</Label>
-          <Input
-            value={editForm.phone}
-            onChange={(e) =>
-              setEditForm({ ...editForm, phone: e.target.value })
-            }
-            className="rounded-xl"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Email</Label>
-        <Input
-          type="email"
-          value={editForm.email}
-          onChange={(e) =>
-            setEditForm({ ...editForm, email: e.target.value })
-          }
-          className="rounded-xl"
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredBookings.length}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Service</Label>
-        <Select
-          value={editForm.service}
-          onValueChange={(value) =>
-            setEditForm({ ...editForm, service: value })
-          }
-        >
-          <SelectTrigger className="rounded-xl">
-            <SelectValue placeholder="Select a service" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="skin-booster">Skin Booster Treatment</SelectItem>
-            <SelectItem value="korean-glow">Korean Glow Facial</SelectItem>
-            <SelectItem value="brightening">Brightening Treatment</SelectItem>
-            <SelectItem value="anti-aging">Anti-Aging Rejuvenation</SelectItem>
-            <SelectItem value="hydration">Hydration Facial</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Dialog open={Boolean(selectedBooking)} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+        <DialogContent className="sm:max-w-[680px] rounded-2xl">
+          {selectedBooking && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Booking Details</DialogTitle>
+                <DialogDescription>Review customer details, admin notes, and local status history.</DialogDescription>
+              </DialogHeader>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Date</Label>
-          <Input
-            type="date"
-            value={editForm.date}
-            onChange={(e) =>
-              setEditForm({ ...editForm, date: e.target.value })
-            }
-            className="rounded-xl"
-          />
-        </div>
+              <div className="grid gap-4">
+                <div className="rounded-xl border p-4">
+                  <p className="font-medium">{selectedBooking.customerName}</p>
+                  <p className="text-sm text-muted-foreground">{selectedBooking.email}</p>
+                  <p className="text-sm text-muted-foreground">{selectedBooking.phone}</p>
+                </div>
 
-        <div className="space-y-2">
-          <Label>Time</Label>
-          <Input
-            type="time"
-            value={editForm.time}
-            onChange={(e) =>
-              setEditForm({ ...editForm, time: e.target.value })
-            }
-            className="rounded-xl"
-          />
-        </div>
-      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bookingNote">Admin remarks</Label>
+                  <textarea
+                    id="bookingNote"
+                    value={notes[selectedBooking.id] || ''}
+                    onChange={(event) => saveNotes(selectedBooking.id, event.target.value)}
+                    className="min-h-28 w-full rounded-xl border bg-background p-3 text-sm"
+                    placeholder="Add internal remarks for follow-up, payment, or customer preferences..."
+                  />
+                </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select
-            value={editForm.status}
-            onValueChange={(value) =>
-              setEditForm({ ...editForm, status: value })
-            }
-          >
-            <SelectTrigger className="rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Confirmed">Confirmed</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-              <SelectItem value="Cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+                <div className="rounded-xl border p-4">
+                  <p className="mb-3 text-sm font-medium">Status history</p>
+                  {(history[selectedBooking.id] || []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No local status changes recorded yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {history[selectedBooking.id].map((entry, index) => (
+                        <p key={`${entry.at}-${index}`} className="text-sm text-muted-foreground">
+                          {entry.status} · {new Date(entry.at).toLocaleString()}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-        <div className="space-y-2">
-          <Label>Payment</Label>
-          <Select
-            value={editForm.paymentStatus}
-            onValueChange={(value) =>
-              setEditForm({ ...editForm, paymentStatus: value })
-            }
-          >
-            <SelectTrigger className="rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Unpaid">Unpaid</SelectItem>
-              <SelectItem value="Deposit Paid">Deposit Paid</SelectItem>
-              <SelectItem value="Fully Paid">Fully Paid</SelectItem>
-              <SelectItem value="Refunded">Refunded</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-
-    <DialogFooter>
-      <Button
-        variant="outline"
-        onClick={() => setIsEditDialogOpen(false)}
-        className="rounded-xl"
-      >
-        Cancel
-      </Button>
-      <Button onClick={handleEditBooking} className="rounded-xl">
-        Save Changes
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-      </div>
+              <DialogFooter>
+                <Button className="rounded-xl" onClick={() => setSelectedBooking(null)}>Done</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function BookingRow({
-  booking,
-  onDelete,
-  onView,
-  onUpdateStatus,
-  onEdit,
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card p-4">
+      <p className="text-2xl font-semibold">{value}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function EmptyState({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="p-12 text-center">
+      <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+      <p className="font-medium">{title}</p>
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
+function Pagination({
+  page,
+  pageSize,
+  total,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }: {
-  booking: Booking;
-  onDelete: (id: string) => void;
-  onView: (booking: Booking) => void;
-  onUpdateStatus: (id: string, status: string) => void;
-  onEdit: (booking: Booking) => void;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }) {
   return (
-    <tr className="hover:bg-muted/20 transition-colors">
-      <td className="px-5 py-4">
-        <div>
-          <p className="font-medium text-foreground text-sm">{booking.customerName}</p>
-          <p className="text-xs text-muted-foreground">{booking.phone}</p>
-          <p className="text-xs text-muted-foreground">{booking.email}</p>
-        </div>
-      </td>
-      <td className="px-5 py-4">
-        <p className="text-sm text-foreground">{booking.service}</p>
-      </td>
-      <td className="px-5 py-4">
-        <p className="text-sm text-foreground">
-  {new Date(booking.appointment).toLocaleDateString()}
-</p>
-
-<p className="text-xs text-muted-foreground">
-  {new Date(booking.appointment).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })}
-</p>
-      </td>
-      <td className="px-5 py-4">
-        <StatusBadge status={booking.status} />
-      </td>
-      <td className="px-5 py-4">
-        <StatusBadge status={booking.paymentStatus} />
-      </td>
-      <td className="px-5 py-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl">
-            <DropdownMenuItem
-  onClick={() => onView(booking)}
-  className="cursor-pointer"
->
-  <Eye className="h-4 w-4 mr-2" />
-  View Details
-</DropdownMenuItem>
-            <DropdownMenuItem
-  onClick={() => onEdit(booking)}
-  className="cursor-pointer"
->
-  <Pencil className="h-4 w-4 mr-2" />
-  Edit Booking
-</DropdownMenuItem>
-            <DropdownMenuSeparator />
-
-{['Pending', 'Confirmed', 'Completed', 'Cancelled'].map((status) => (
-  <DropdownMenuItem
-    key={status}
-    onClick={() => onUpdateStatus(booking.id, status)}
-    className="cursor-pointer"
-  >
-    <RefreshCw className="h-4 w-4 mr-2" />
-    Mark as {status}
-  </DropdownMenuItem>
-))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-  onClick={() => onDelete(booking.id)}
-  className="cursor-pointer text-red-600 focus:text-red-600"
->
-  <Trash2 className="h-4 w-4 mr-2" />
-  Delete Booking
-</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </td>
-    </tr>
+    <div className="flex flex-col gap-3 border-t p-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-muted-foreground">
+        Showing {total === 0 ? 0 : (page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} of {total}
+      </p>
+      <div className="flex items-center gap-2">
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="h-9 w-[90px] rounded-lg">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {pageSizeOptions.map((size) => (
+              <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">{page} / {totalPages}</span>
+        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
+          Next
+        </Button>
+      </div>
+    </div>
   );
 }

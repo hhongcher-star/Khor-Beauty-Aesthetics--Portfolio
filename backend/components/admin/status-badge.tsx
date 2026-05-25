@@ -10,7 +10,7 @@ type StatusType =
   | 'Active' | 'Inactive';
 
 interface StatusBadgeProps {
-  status: StatusType;
+  status?: string;
   className?: string;
 }
 
@@ -37,16 +37,44 @@ const statusStyles: Record<StatusType, string> = {
   Inactive: 'bg-gray-50 text-gray-700 border-gray-200',
 };
 
+const statusAliases: Record<string, StatusType> = {
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  unpaid: 'Unpaid',
+  'deposit paid': 'Deposit Paid',
+  'fully paid': 'Fully Paid',
+  refunded: 'Refunded',
+  new: 'New',
+  contacted: 'Contacted',
+  closed: 'Closed',
+  paid: 'Paid',
+  failed: 'Failed',
+  active: 'Active',
+  inactive: 'Inactive',
+};
+
+const normalizeStatus = (status?: string): StatusType | null => {
+  if (!status) return null;
+
+  return statusAliases[status.trim().toLowerCase()] ?? null;
+};
+
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const normalizedStatus = normalizeStatus(status);
+
   return (
     <span
       className={cn(
         'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
-        statusStyles[status] || 'bg-gray-50 text-gray-700 border-gray-200',
+        normalizedStatus
+          ? statusStyles[normalizedStatus]
+          : 'bg-gray-50 text-gray-700 border-gray-200',
         className
       )}
     >
-      {status}
+      {normalizedStatus ?? status ?? 'Unknown'}
     </span>
   );
 }

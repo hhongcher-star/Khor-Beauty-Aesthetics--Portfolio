@@ -8,9 +8,16 @@ import { apiRequest } from '@/lib/api'
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: 'Our Services | Lumière Beauty Clinic',
+  title: 'Our Services | Khor Beauty Aesthetics',
   description:
-    'Explore our comprehensive range of luxury skincare treatments including facials, anti-aging, body contouring, and more.',
+    'Editable business content: explore Khor Beauty services including facials, skin boosters, brightening care, hydration treatments, and body care.',
+  alternates: { canonical: '/services' },
+  openGraph: {
+    url: '/services',
+    title: 'Beauty Services by Khor Beauty Aesthetics',
+    description:
+      'Editable business content: explore facials, skin boosters, brightening care, hydration treatments, and body care.',
+  },
 }
 
 export default async function ServicesPage() {

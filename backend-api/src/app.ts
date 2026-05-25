@@ -9,6 +9,7 @@ import serviceRoutes from "./routes/service.routes";
 import authRoutes from "./routes/auth.routes";
 import paymentRoutes from "./routes/payment.routes";
 import { errorHandler } from "./middleware/error.middleware";
+import { env } from "./config/env";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -16,7 +17,19 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: true,
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (env.corsOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS origin not allowed: ${origin}`));
+    },
     credentials: true,
   })
 );
